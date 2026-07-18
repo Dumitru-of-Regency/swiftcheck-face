@@ -33,7 +33,7 @@ button { padding:14px 24px; border-radius:8px; border:none; font-weight:700; cur
 .btn-primary { background:#4f46e5; }
 .btn-primary:hover { background:#4338ca; }
 .btn-camera { background:#0891b2; }
-.btn-camera:disabled { background:#475569; cursor:not-allowed; }
+.btn-camera:disabled { background:#475569; cursor:not-allowed; opacity:0.5; }
 .btn-capture { background:#10b981; display:none; }
 
 #video { width:100%; border-radius:10px; display:none; margin-top:15px; }
@@ -117,20 +117,24 @@ const faceDescriptorsRef = db.ref('sites/' + SITE_ID + '/faceDescriptors');
 let modelsLoaded = false;
 let videoStream = null;
 
-// Load face-api models
+// Load face-api models - FIXED VERSION
 async function loadModels() {
-const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
 try {
+// Use the correct CDN path for face-api.js models
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+
 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
 modelsLoaded = true;
 document.getElementById('status').className = 'status status-success';
 document.getElementById('status').textContent = '✅ Models loaded! Ready to register operatives.';
 document.getElementById('btnCamera').disabled = false;
 } catch (err) {
+console.error('Model loading error:', err);
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = '❌ Error loading models: ' + err.message;
+document.getElementById('status').textContent = '❌ Error loading models. Please refresh the page.';
 }
 }
 
@@ -210,14 +214,15 @@ document.getElementById('role').value = '';
 document.getElementById('qrCode').value = '';
 
 } catch (err) {
+console.error('Capture error:', err);
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = ' Error: ' + err.message;
 }
 }
 
+// Initialize when page loads
 loadModels();
 </script>
 </body>
 </html>
-
 
