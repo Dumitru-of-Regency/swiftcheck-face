@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FaceCheck · Admin Panel</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background:#020617; color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
+.container { max-width:900px; margin:0 auto; padding:20px; }
+
+/* Header & Logo */
+header { padding:20px 0 30px; border-bottom:1px solid #1e293b; margin-bottom:30px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; }
+.logo-text { font-size:28px; font-weight:800; letter-spacing:1px; line-height:1.2; }
+.logo-regency { color:#F58C1F; }
+.logo-facades { color:#8E8E8E; display:block; font-size:24px; }
+.site-badge { background:#4f46e5; color:#fff; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; }
+
+.card { background:#1e293b; padding:25px; border-radius:14px; margin-bottom:20px; border:1px solid #293548; }
+.card h2 { margin:0 0 20px; font-size:18px; color:#f1f5f9; }
+
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; }
+.form-group { display:flex; flex-direction:column; }
+.form-group.full { grid-column:1/-1; }
+label { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; font-weight:600; }
+input { padding:12px 14px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:14px; outline:none; }
+input:focus { border-color:#4f46e5; }
+
+.btn-group { display:flex; gap:10px; flex-wrap:wrap; }
+button { padding:12px 24px; border-radius:8px; border:none; font-weight:700; cursor:pointer; color:#fff; font-size:14px; font-family:inherit; }
+.btn-primary { background:#4f46e5; }
+.btn-primary:hover { background:#4338ca; }
+.btn-secondary { background:#64748b; }
+.btn-danger { background:#dc2626; }
+.btn-small { padding:8px 14px; font-size:12px; }
+.btn-register { background:#10b981; width:100%; margin-bottom:20px; font-size:16px; padding:16px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 10px; }
+.btn-register:hover { background:#059669; }
+
+.operative-list { margin-top:20px; }
+.operative-item { background:#0f172a; padding:16px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border:1px solid #1e293b; }
+.operative-info { flex:1; min-width:200px; }
+.operative-name { font-size:16px; font-weight:700; color:#f1f5f9; }
+.operative-details { font-size:12px; color:#94a3b8; margin-top:4px; }
+.operative-company { color:#f59e0b; font-weight: 600; }
+.operative-actions { display:flex; gap:8px; }
+.empty { padding:40px; text-align:center; color:#64748b; }
+
+.status-msg { padding:14px; border-radius:10px; margin-bottom:20px; text-align:center; font-weight:600; display:none; }
+.status-success { background:#064e3b; color:#6ee7b7; display:block; }
+.status-error { background:#7f1d1d; color:#fca5a5; display:block; }
+
+.footer { text-align:center; font-size:11px; color:#475569; margin-top:30px; padding:15px 0; border-top:1px solid #1e293b; }
+
+@media (max-width:600px) { .form-grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo-text">
+<span class="logo-regency">REGENCY</span>
+<span class="logo-facades">FACADES</span>
+</div>
+<div class="site-badge">Site ID: <span id="site-id-display">I</span></div>
+</header>
+
+<a href="index.html" class="btn-register">
+📷 Go to Face Registration Page
+</a>
+
+<div id="status-msg" class="status-msg"></div>
+
+<div class="card">
+<h2 id="form-title">Add / Edit Operative Details</h2>
+<form id="operative-form">
+<input type="hidden" id="operative-id">
+<div class="form-grid">
+<div class="form-group">
+<label>Operative Name *</label>
+<input type="text" id="name" required placeholder="John Smith">
+</div>
+<div class="form-group">
+<label>Company / Employer *</label>
+<input type="text" id="company" required placeholder="ABC Construction Ltd">
+</div>
+<div class="form-group">
+<label>Role / Job Title</label>
+<input type="text" id="role" placeholder="Electrician">
+</div>
+<div class="form-group">
+<label>QR Code ID (Optional)</label>
+<input type="text" id="qrCode" placeholder="For QR scanning fallback">
+</div>
+</div>
+<div class="btn-group">
+<button type="submit" class="btn-primary">💾 Save Details</button>
+<button type="button" class="btn-secondary" onclick="resetForm()">Cancel</button>
+</div>
+</form>
+</div>
+
+<div class="card">
+<h2>Registered Operatives (<span id="operative-count">0</span>)</h2>
+<div id="operative-list" class="operative-list">
+<div class="empty">Loading operatives...</div>
+</div>
+</div>
+
+<div class="footer">Regency Facades © 2026</div>
+</div>
+
+<script>
+// ========== SITE CONFIGURATION ==========
+const SITE_ID = "I"; // Change to "II", "III", etc. for other sites
+// =========================================
+
+document.getElementById('site-id-display').textContent = SITE_ID;
+
+const firebaseConfig = {
+apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
+authDomain: "swiftcheck-face.firebaseapp.com",
+databaseURL: "https://swiftcheck-face-default-rtdb.europe-west1.firebasedatabase.app",
+projectId: "swiftcheck-face",
+storageBucket: "swiftcheck-face.firebasestorage.app",
+messagingSenderId: "450988754217",
+appId: "1:450988754217:web:3635f97011943c51266338"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const operativesRef = db.ref('sites/' + SITE_ID + '/operatives');
+
+const form = document.getElementById('operative-form');
+const operativeList = document.getElementById('operative-list');
+const statusMsg = document.getElementById('status-msg');
+let operatives = {};
+
+function showStatus(msg, type) {
+statusMsg.textContent = msg;
+statusMsg.className = 'status-msg status-' + type;
+setTimeout(() => { statusMsg.style.display = 'none'; }, 3000);
+}
+
+function resetForm() {
+form.reset();
+document.getElementById('operative-id').value = '';
+document.getElementById('form-title').textContent = 'Add / Edit Operative Details';
+}
+
+form.addEventListener('submit', async (e) => {
+e.preventDefault();
+const id = document.getElementById('operative-id').value;
+const operative = {
+name: document.getElementById('name').value.trim(),
+company: document.getElementById('company').value.trim(),
+role: document.getElementById('role').value.trim(),
+qrCode: document.getElementById('qrCode').value.trim(),
+updatedAt: firebase.database.ServerValue.TIMESTAMP
+};
+
+// If adding new, add creation timestamp
+if (!id) {
+operative.createdAt = firebase.database.ServerValue.TIMESTAMP;
+}
+
+try {
+if (id) {
+await operativesRef.child(id).update(operative);
+showStatus('Operative details updated ✓', 'success');
+} else {
+await operativesRef.push(operative);
+showStatus('Operative added ✓ (Remember to capture face in registration page)', 'success');
+}
+resetForm();
+} catch (err) {
+showStatus('Error: ' + err.message, 'error');
+}
+});
+
+function editOperative(id) {
+const o = operatives[id];
+document.getElementById('operative-id').value = id;
+document.getElementById('name').value = o.name || '';
+document.getElementById('company').value = o.company || '';
+document.getElementById('role').value = o.role || '';
+document.getElementById('qrCode').value = o.qrCode || '';
+document.getElementById('form-title').textContent = 'Edit Operative: ' + o.name;
+window.scrollTo(0, 0);
+}
+
+async function deleteOperative(id) {
+if (!confirm('Delete this operative and their face data? This cannot be undone.')) return;
+try {
+await operativesRef.child(id).remove();
+// Also delete face descriptor if it exists
+await db.ref('sites/' + SITE_ID + '/faceDescriptors/' + id).remove();
+showStatus('Operative deleted ✓', 'success');
+} catch (err) {
+showStatus('Error: ' + err.message, 'error');
+}
+}
+
+function renderOperatives() {
+const list = Object.entries(operatives).map(([id, o]) => ({ id, ...o }));
+document.getElementById('operative-count').textContent = list.length;
+
+if (list.length === 0) {
+operativeList.innerHTML = '<div class="empty">No operatives registered yet. Add your first operative above.</div>';
+return;
+}
+
+list.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+operativeList.innerHTML = list.map(o => `
+<div class="operative-item">
+<div class="operative-info">
+<div class="operative-name">${o.name || 'Unnamed'}</div>
+<div class="operative-details">
+${o.company ? `<span class="operative-company">${o.company}</span> · ` : ''}
+${o.role || 'No role'}
+${o.qrCode ? `<br/>QR ID: <code>${o.qrCode}</code>` : ''}
+</div>
+</div>
+<div class="operative-actions">
+<button class="btn-primary btn-small" onclick="editOperative('${o.id}')">✏️ Edit</button>
+<button class="btn-danger btn-small" onclick="deleteOperative('${o.id}')">🗑 Delete</button>
+</div>
+</div>
+`).join('');
+}
+
+operativesRef.on('value', snap => {
+operatives = {};
+snap.forEach(child => { operatives[child.key] = child.val(); });
+renderOperatives();
+});
+</script>
+</body>
+</html>
+

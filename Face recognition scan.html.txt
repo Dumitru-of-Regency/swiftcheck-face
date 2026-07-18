@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FaceCheck · Site Terminal</title>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; padding:0; background:#020617; color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
+.container { max-width:600px; margin:0 auto; padding:20px 16px 40px; }
+
+header { text-align:center; padding:20px 0 30px; border-bottom:1px solid #1e293b; margin-bottom:20px; }
+.logo-text { font-size:28px; font-weight:800; letter-spacing:1px; line-height:1.2; }
+.logo-regency { color:#F58C1F; }
+.logo-facades { color:#8E8E8E; display:block; font-size:24px; }
+
+.status { padding:16px; border-radius:10px; text-align:center; font-weight:600; margin-bottom:20px; min-height:60px; display:flex; align-items:center; justify-content:center; }
+.status-idle { background:#1e293b; color:#64748b; border:2px dashed #334155; }
+.status-scanning { background:#fef3c7; color:#78350f; border:2px solid #f59e0b; }
+.status-success { background:#064e3b; color:#6ee7b7; border:2px solid #10b981; }
+.status-error { background:#7f1d1d; color:#fca5a5; border:2px solid #ef4444; }
+.status-loading { background:#1e3a8a; color:#93c5fd; border:2px solid #3b82f6; }
+
+.card { background:#1e293b; padding:20px; border-radius:14px; margin-bottom:16px; border:1px solid #293548; }
+.card h2 { margin:0 0 15px; font-size:14px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+
+button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:16px; border-radius:10px; border:none; font-weight:700; font-size:15px; cursor:pointer; color:#fff; margin-bottom:10px; font-family:inherit; }
+button:active { transform:scale(0.98); }
+.btn-face { background:#0891b2; }
+.btn-face.scanning { background:#f59e0b; animation:pulse 1.5s infinite; }
+.btn-qr { background:#059669; }
+.btn-qr.scanning { background:#dc2626; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,0.5);} 50%{box-shadow:0 0 0 12px rgba(245,158,11,0);} }
+
+#video { width:100%; border-radius:10px; display:none; margin-bottom:10px; }
+#qr-reader { width:100%; border-radius:10px; overflow:hidden; margin-bottom:10px; background:#000; display:none; }
+
+.recent-item { background:#0f172a; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+.recent-item .info { flex:1; }
+.recent-item .name { font-weight:600; color:#f1f5f9; }
+.recent-item .method { font-size:11px; color:#94a3b8; margin-top:2px; }
+.recent-item .time { color:#64748b; font-size:11px; }
+.badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+.badge-face { background:#164e63; color:#67e8f9; }
+.badge-qr { background:#14532d; color:#86efac; }
+.badge-in { background:#064e3b; color:#6ee7b7; margin-left:6px; }
+.badge-out { background:#78350f; color:#fcd34d; margin-left:6px; }
+
+.footer { text-align:center; font-size:11px; color:#475569; margin-top:20px; padding:10px 0; border-top:1px solid #1e293b; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<div class="logo-text">
+<span class="logo-regency">REGENCY</span>
+<span class="logo-facades">FACADES</span>
+</div>
+</header>
+
+<div id="status" class="status status-idle">Ready — Use Face Scan or QR Code to sign in/out</div>
+
+<div class="card">
+<h2>Face Recognition Scan</h2>
+<button type="button" class="btn-face" id="btnFace" onclick="toggleFaceScan()">
+🎥 START FACE SCAN
+</button>
+<video id="video" autoplay muted playsinline></video>
+</div>
+
+<div class="card">
+<h2>QR Code Scan</h2>
+<div id="qr-reader"></div>
+<button type="button" class="btn-qr" id="btnQr" onclick="toggleQrScan()">
+📷 OPEN CAMERA FOR QR
+</button>
+</div>
+
+<div class="card">
+<h2>Recent Activity</h2>
+<div id="recentList"><div style="color:#64748b; text-align:center; padding:20px;">No activity yet today.</div></div>
+</div>
+
+<div class="footer">Regency Facades © 2026</div>
+</div>
+
+<script>
+// ========== SITE CONFIGURATION ==========
+const SITE_ID = "I";
+// =========================================
+
+const firebaseConfig = {
+apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
+authDomain: "swiftcheck-face.firebaseapp.com",
+databaseURL: "https://swiftcheck-face-default-rtdb.europe-west1.firebasedatabase.app",
+projectId: "swiftcheck-face",
+storageBucket: "swiftcheck-face.firebasestorage.app",
+messagingSenderId: "450988754217",
+appId: "1:450988754217:web:3635f97011943c51266338"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const signinsRef = db.ref('sites/' + SITE_ID + '/signins');
+const statusRef = db.ref('sites/' + SITE_ID + '/status');
+const faceDescriptorsRef = db.ref('sites/' + SITE_ID + '/faceDescriptors');
+const operativesRef = db.ref('sites/' + SITE_ID + '/operatives');
+
+let isFaceScanning = false;
+let isQrScanning = false;
+let videoStream = null;
+let qrScanner = null;
+let faceDescriptors = {};
+let operatives = {};
+
+// Load data
+faceDescriptorsRef.on('value', snap => {
+faceDescriptors = {};
+snap.forEach(child => { faceDescriptors[child.key] = child.val(); });
+});
+
+operativesRef.on('value', snap => {
+operatives = {};
+snap.forEach(child => { operatives[child.key] = child.val(); });
+});
+
+function todayStart() { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+
+signinsRef.orderByChild('timestamp').on('value', snap => {
+const today = todayStart();
+const list = [];
+snap.forEach(child => {
+const val = child.val();
+if (val.timestamp >= today) list.push(val);
+});
+list.reverse();
+list.length = Math.min(list.length, 5);
+
+const html = list.map(s => {
+const time = new Date(s.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+const methodBadge = s.method === 'FACE' ? '<span class="badge badge-face">FACE</span>' : '<span class="badge badge-qr">QR</span>';
+const actionBadge = s.action === 'IN' ? '<span class="badge badge-in">IN</span>' : '<span class="badge badge-out">OUT</span>';
+return `<div class="recent-item">
+<div class="info">
+<div class="name">${s.operativeName} ${actionBadge}</div>
+<div class="method">${methodBadge}</div>
+</div>
+<div class="time">${time}</div>
+</div>`;
+}).join('') || '<div style="color:#64748b; text-align:center; padding:20px;">No activity yet today.</div>';
+document.getElementById('recentList').innerHTML = html;
+});
+
+async function toggleFaceScan() {
+if (isFaceScanning) { stopFaceScan(); }
+else { startFaceScan(); }
+}
+
+async function startFaceScan() {
+if (isQrScanning) stopQrScan();
+isFaceScanning = true;
+document.getElementById('btnFace').classList.add('scanning');
+document.getElementById('btnFace').textContent = '⏹ STOP FACE SCAN';
+document.getElementById('status').className = 'status status-scanning';
+document.getElementById('status').textContent = '📷 Position face in camera...';
+
+try {
+videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 } } });
+const video = document.getElementById('video');
+video.srcObject = videoStream;
+video.style.display = 'block';
+detectFaceLoop();
+} catch (err) {
+document.getElementById('status').className = 'status status-error';
+document.getElementById('status').textContent = '❌ Camera error: ' + err.message;
+stopFaceScan();
+}
+}
+
+function stopFaceScan() {
+isFaceScanning = false;
+document.getElementById('btnFace').classList.remove('scanning');
+document.getElementById('btnFace').textContent = '🎥 START FACE SCAN';
+document.getElementById('status').className = 'status status-idle';
+document.getElementById('status').textContent = 'Ready — Use Face Scan or QR Code to sign in/out';
+document.getElementById('video').style.display = 'none';
+if (videoStream) { videoStream.getTracks().forEach(track => track.stop()); videoStream = null; }
+}
+
+async function detectFaceLoop() {
+if (!isFaceScanning) return;
+try {
+const video = document.getElementById('video');
+const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+if (detection && isFaceScanning) {
+const matchedOperative = findFaceMatch(detection.descriptor);
+if (matchedOperative) {
+await recordSignin(matchedOperative.id, matchedOperative.name, matchedOperative.company, 'FACE');
+stopFaceScan();
+return;
+}
+}
+} catch (err) { console.error('Detection error:', err); }
+setTimeout(detectFaceLoop, 500);
+}
+
+function findFaceMatch(inputDescriptor) {
+const THRESHOLD = 0.6;
+for (const [id, data] of Object.entries(faceDescriptors)) {
+const storedDescriptor = new Float32Array(data.descriptor);
+const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
+if (distance < THRESHOLD) {
+const operative = operatives[id];
+if (operative) return { id, name: operative.name, company: operative.company };
+}
+}
+return null;
+}
+
+function toggleQrScan() {
+if (isQrScanning) { stopQrScan(); }
+else { startQrScan(); }
+}
+
+function startQrScan() {
+if (isFaceScanning) stopFaceScan();
+isQrScanning = true;
+document.getElementById('btnQr').classList.add('scanning');
+document.getElementById('btnQr').textContent = '⏹ STOP QR SCAN';
+document.getElementById('status').className = 'status status-scanning';
+document.getElementById('status').textContent = '📷 Point camera at QR code...';
+document.getElementById('qr-reader').style.display = 'block';
+
+qrScanner = new Html5Qrcode("qr-reader");
+qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 240 } },
+(decodedText) => {
+handleQrCode(decodedText);
+stopQrScan();
+},
+(errorMessage) => {}
+).catch(err => {
+document.getElementById('status').className = 'status status-error';
+document.getElementById('status').textContent = ' QR error: ' + err.message;
+stopQrScan();
+});
+}
+
+function stopQrScan() {
+isQrScanning = false;
+document.getElementById('btnQr').classList.remove('scanning');
+document.getElementById('btnQr').textContent = '📷 OPEN CAMERA FOR QR';
+document.getElementById('status').className = 'status status-idle';
+document.getElementById('status').textContent = 'Ready — Use Face Scan or QR Code to sign in/out';
+document.getElementById('qr-reader').style.display = 'none';
+if (qrScanner) { try { qrScanner.stop(); } catch(e){} qrScanner = null; }
+}
+
+async function handleQrCode(qrData) {
+let operative = null;
+let operativeId = null;
+
+for (const [id, data] of Object.entries(operatives)) {
+if (data.qrCode === qrData || id === qrData) {
+operative = data;
+operativeId = id;
+break;
+}
+}
+
+if (!operative) {
+document.getElementById('status').className = 'status status-error';
+document.getElementById('status').textContent = '❌ Unknown QR code: ' + qrData;
+return;
+}
+
+await recordSignin(operativeId, operative.name, operative.company, 'QR');
+}
+
+async function recordSignin(operativeId, name, company, method) {
+document.getElementById('status').className = 'status status-loading';
+document.getElementById('status').textContent = ' Recording ' + name + '...';
+
+try {
+const statusSnap = await statusRef.child(operativeId).once('value');
+const currentStatus = statusSnap.val();
+const isOnSite = currentStatus && currentStatus.onSite;
+const action = isOnSite ? 'OUT' : 'IN';
+
+await signinsRef.push({
+operativeId,
+operativeName: name,
+operativeCompany: company,
+action,
+method,
+timestamp: firebase.database.ServerValue.TIMESTAMP,
+date: new Date().toISOString().slice(0,10)
+});
+
+await statusRef.child(operativeId).set({
+onSite: action === 'IN',
+lastAction: action,
+lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
+company: company
+});
+
+document.getElementById('status').className = 'status status-success';
+document.getElementById('status').textContent = '✅ ' + name + ' — ' + (action === 'IN' ? 'SIGNED IN' : 'SIGNED OUT');
+if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+setTimeout(() => {
+if (!isFaceScanning && !isQrScanning) {
+document.getElementById('status').className = 'status status-idle';
+document.getElementById('status').textContent = 'Ready — Use Face Scan or QR Code to sign in/out';
+}
+}, 3000);
+} catch (err) {
+document.getElementById('status').className = 'status status-error';
+document.getElementById('status').textContent = '❌ Error: ' + err.message;
+}
+}
+</script>
+</body>
+</html>
+
