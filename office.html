@@ -10,11 +10,18 @@
 * { box-sizing: border-box; }
 body { background:#020617; color:#fff; font-family:Arial,sans-serif; margin:0; padding:20px; }
 .container { max-width:1200px; margin:0 auto; }
-header { text-align:center; padding:20px 0; border-bottom:1px solid #1e293b; margin-bottom:20px; }
+header {
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 0;
+border-bottom:1px solid #1e293b;
+margin-bottom:20px;
+}
 .logo { font-size:28px; font-weight:800; }
 .orange { color:#F58C1F; }
 .grey { color:#8E8E8E; display:block; font-size:24px; }
-.badge { background:#064e3b; color:#6ee7b7; padding:5px 12px; border-radius:15px; font-size:12px; display:inline-block; margin-top:10px; }
+.badge { background:#064e3b; color:#6ee7b7; padding:5px 12px; border-radius:15px; font-size:12px; }
 .stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px; }
 .stat { background:#1e293b; padding:20px; border-radius:10px; text-align:center; }
 .num { font-size:48px; font-weight:800; }
@@ -153,8 +160,11 @@ return Math.floor(s / 86400) + 'd ago';
 
 function render() {
 const today = todayStart();
-const todays = allRecords.filter(r => r.timestamp >= today);
+console.log('Rendering records. Total records:', allRecords.length);
+console.log('Today\'s records:', allRecords.filter(r => r.timestamp >= today).length);
 
+// Calculate stats
+const todays = allRecords.filter(r => r.timestamp >= today);
 const onSiteNow = Object.values(statusData).filter(s => s.onSite).length;
 const totalIns = todays.filter(r => r.action === 'IN').length;
 const recent = todays.filter(r => Date.now() - r.timestamp < 15 * 60 * 1000).length;
@@ -165,6 +175,7 @@ document.getElementById('total').textContent = totalIns;
 document.getElementById('recent').textContent = recent;
 document.getElementById('unique').textContent = unique;
 
+// Company breakdown
 const companyCount = {};
 Object.values(statusData).forEach(s => {
 if (s.onSite) {
@@ -187,16 +198,24 @@ grid.innerHTML = companies.map(([c, n]) => `
 `).join('');
 }
 
+// Render table
 const tbody = document.getElementById('tbody');
 const filter = document.getElementById('search').value.toLowerCase();
 
-let records = todays.filter(r =>
-r.operativeName.toLowerCase().includes(filter) ||
-(r.operativeCompany && r.operativeCompany.toLowerCase().includes(filter)) ||
-r.method.toLowerCase().includes(filter)
-);
+// Get all today's records, apply filter, sort by newest first
+let records = todays.filter(r => {
+const nameMatch = r.operativeName.toLowerCase().includes(filter);
+const companyMatch = (r.operativeCompany || '').toLowerCase().includes(filter);
+const methodMatch = r.method.toLowerCase().includes(filter);
+return nameMatch || companyMatch || methodMatch;
+});
 
 records.sort((a, b) => b.timestamp - a.timestamp);
+
+console.log('Records to display:', records.length);
+records.forEach(r => {
+console.log('Record:', r.operativeName, r.method, r.action, new Date(r.timestamp).toLocaleTimeString());
+});
 
 if (records.length === 0) {
 tbody.innerHTML = '<tr><td colspan="5" class="empty">No records today</td></tr>';
@@ -221,12 +240,19 @@ ${r.operativeCompany ? `<div style="font-size:12px; color:#F58C1F;">${escapeHtml
 }
 }
 
+// Listen for sign-in records
 signinsRef.on('value', snap => {
+console.log('Sign-ins snapshot received');
 allRecords = [];
-snap.forEach(child => allRecords.push({ id: child.key, ...child.val() }));
+snap.forEach(child => {
+const val = child.val();
+console.log('Record:', child.key, val);
+allRecords.push({ id: child.key, ...val });
+});
 render();
 });
 
+// Listen for status changes
 statusRef.on('value', snap => {
 statusData = {};
 snap.forEach(child => { statusData[child.key] = child.val(); });
