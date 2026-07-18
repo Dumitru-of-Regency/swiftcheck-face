@@ -53,6 +53,7 @@ header { padding:20px 0 30px; border-bottom:1px solid #1e293b; margin-bottom:30p
 table { width:100%; border-collapse:collapse; }
 thead th { background:#0f172a; padding:16px; text-align:left; font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1.5px; font-weight:600; border-bottom:1px solid #293548; }
 tbody td { padding:16px; border-bottom:1px solid #0f172a; font-size:14px; }
+tbody tr:last-child td { border-bottom:none; }
 tbody tr:hover { background:#293548; }
 .operative-name { font-weight:700; color:#f1f5f9; }
 .operative-company { font-size:11px; color:#f59e0b; margin-top:4px; font-weight:600; }
@@ -119,10 +120,6 @@ tbody tr:hover { background:#293548; }
 </div>
 
 <script>
-// ========== SITE CONFIGURATION ==========
-const SITE_ID = "I";
-// =========================================
-
 const firebaseConfig = {
 apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
 authDomain: "swiftcheck-face.firebaseapp.com",
@@ -135,8 +132,8 @@ appId: "1:450988754217:web:3635f97011943c51266338"
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const signinsRef = db.ref('sites/' + SITE_ID + '/signins');
-const statusRef = db.ref('sites/' + SITE_ID + '/status');
+const signinsRef = db.ref('signins');
+const statusRef = db.ref('status');
 
 let allRecords = [];
 let operativeStatus = {};
@@ -164,11 +161,8 @@ if (status.onSite) { const company = status.company || 'Unknown'; companyCount[c
 const companies = Object.entries(companyCount).sort((a,b) => b[1] - a[1]);
 document.getElementById('company-grid').innerHTML = companies.length ? companies.map(([c, n]) => `<div class="company-item"><div class="name">${escapeHtml(c)}</div><div class="count">${n}</div><div class="label">operatives</div></div>`).join('') : '<div class="empty">No operatives on site</div>';
 
-// Show ALL records (not just currently on site)
 let records = todays;
 if (filterText) records = records.filter(r => String(r.operativeName).toLowerCase().includes(filterText) || String(r.operativeCompany).toLowerCase().includes(filterText) || String(r.method).toLowerCase().includes(filterText));
-
-// Sort by time (newest first)
 records.sort((a,b) => b.timestamp - a.timestamp);
 
 document.getElementById('tbody').innerHTML = records.length ? records.map(r => {
@@ -176,7 +170,7 @@ const t = new Date(r.timestamp);
 const timeStr = t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
 const methodClass = r.method === 'FACE' ? 'method-face' : 'method-qr';
 return `<tr>
-<td><div class="operative-name">${escapeHtml(r.operativeName)}</div>${r.operativeCompany ? `<div class="operative-company">${escapeHtml(r.operativeCompany)}</div>` : ''}</div></td>
+<td><div class="operative-name">${escapeHtml(r.operativeName)}</div>${r.operativeCompany ? `<div class="operative-company">${escapeHtml(r.operativeCompany)}</div>` : ''}</td>
 <td><span class="method-badge ${methodClass}">${r.method}</span></td>
 <td><span class="action-badge action-${r.action}">${r.action}</span></td>
 <td class="time-cell">${timeStr}</td>
@@ -185,7 +179,6 @@ return `<tr>
 }).join('') : '<tr><td colspan="5" class="empty">No records' + (filterText ? ' matching "' + escapeHtml(filterText) + '"' : ' today') + '</td></tr>';
 }
 
-// Load ALL sign-ins (not filtered)
 signinsRef.on('value', snap => {
 allRecords = [];
 snap.forEach(child => allRecords.push({ id: child.key, ...child.val() }));
@@ -212,7 +205,7 @@ if (!filtered.length) { alert('No records for this period'); return; }
 filtered.sort((a,b) => a.timestamp - b.timestamp);
 let csv = 'Date,Time,Name,Company,Method,Action\n';
 filtered.forEach(r => { csv += `"${new Date(r.timestamp).toISOString().split('T')[0]}","${new Date(r.timestamp).toLocaleTimeString()}","${r.operativeName}","${r.operativeCompany}","${r.method}","${r.action}"\n`; });
-const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `facecheck-site${SITE_ID}-${start.toISOString().split('T')[0]}-to-${end.toISOString().split('T')[0]}.csv`; a.click();
+const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `facecheck-${start.toISOString().split('T')[0]}-to-${end.toISOString().split('T')[0]}.csv`; a.click();
 hideExportDialog();
 }
 
