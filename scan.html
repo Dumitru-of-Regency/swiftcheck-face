@@ -130,19 +130,32 @@ faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
 ]);
 modelsLoaded = true;
+console.log('✅ Models loaded');
 } catch (err) {
 console.error('Model error:', err);
 }
 }
 
+// Load face descriptors
 faceDescriptorsRef.on('value', snap => {
 faceDescriptors = {};
-snap.forEach(child => { faceDescriptors[child.key] = child.val(); });
+let count = 0;
+snap.forEach(child => {
+faceDescriptors[child.key] = child.val();
+count++;
+});
+console.log(` Loaded ${count} face descriptors`);
 });
 
+// Load operatives
 operativesRef.on('value', snap => {
 operatives = {};
-snap.forEach(child => { operatives[child.key] = child.val(); });
+let count = 0;
+snap.forEach(child => {
+operatives[child.key] = child.val();
+count++;
+});
+console.log(` Loaded ${count} operatives`);
 });
 
 function showStatus(message, type) {
@@ -218,9 +231,11 @@ if (detection) {
 const result = findBestMatch(detection.descriptor);
 
 if (result.match) {
+console.log('✅ Match found:', result.match.name);
 await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
 } else {
+console.log(' No match. Best distance:', result.bestDistance, 'Threshold:', result.threshold);
 showStatus('Face not recognized - try QR code', 'error');
 setTimeout(() => {
 if (isFaceScanning) {
@@ -259,9 +274,11 @@ return;
 const result = findBestMatch(detection.descriptor);
 
 if (result.match) {
+console.log('✅ Manual capture match:', result.match.name);
 await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
 } else {
+console.log('❌ Manual capture no match. Distance:', result.bestDistance);
 showStatus('Face not recognized - try QR code', 'error');
 }
 } catch (err) {
@@ -270,15 +287,19 @@ showStatus('Error: ' + err.message, 'error');
 }
 
 function findBestMatch(inputDescriptor) {
-const THRESHOLD = 0.65;
+const THRESHOLD = 0.7; // More lenient (was 0.65)
 let bestDistance = Infinity;
 let bestMatch = null;
 let bestId = null;
+
+console.log('Checking', Object.keys(faceDescriptors).length, 'registered faces');
 
 for (const [id, data] of Object.entries(faceDescriptors)) {
 try {
 const storedDescriptor = new Float32Array(data.descriptor);
 const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
+
+console.log(' ', data.name, ':', distance.toFixed(3));
 
 if (distance < bestDistance) {
 bestDistance = distance;
@@ -291,7 +312,8 @@ const operative = operatives[id];
 if (operative) {
 return {
 match: { id, name: operative.name, company: operative.company },
-distance: distance
+distance: distance,
+threshold: THRESHOLD
 };
 }
 }
@@ -302,7 +324,8 @@ console.error('Match error:', err);
 
 return {
 match: null,
-bestDistance: bestDistance === Infinity ? 999 : bestDistance
+bestDistance: bestDistance === Infinity ? 999 : bestDistance,
+threshold: THRESHOLD
 };
 }
 
