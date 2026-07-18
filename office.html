@@ -3,117 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FaceCheck · Office Dashboard</title>
+<title>FaceCheck - Office</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 * { box-sizing: border-box; }
-body { margin:0; padding:0; background:#020617; color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
-.container { max-width:1200px; margin:0 auto; padding:24px 20px 60px; }
-header { padding:20px 0 30px; border-bottom:1px solid #1e293b; margin-bottom:30px; }
-.logo-container { display:flex; align-items:center; gap:15px; }
-.logo-text { font-size:28px; font-weight:800; letter-spacing:1px; line-height:1.2; }
-.logo-regency { color:#F58C1F; }
-.logo-facades { color:#8E8E8E; display:block; font-size:24px; }
-.live-badge { display:inline-flex; align-items:center; gap:8px; background:#064e3b; color:#6ee7b7; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; margin-left:auto; }
-.live-dot { width:8px; height:8px; background:#10b981; border-radius:50%; animation:blink 1.5s infinite; }
-@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
-.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:20px; margin-bottom:30px; }
-.stat { background:#1e293b; padding:24px; border-radius:14px; border:1px solid #293548; }
-.stat .num { font-size:48px; font-weight:800; line-height:1; }
-.stat .lbl { font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1.5px; margin-top:10px; }
-.stat.green .num { color:#10b981; }
-.stat.blue .num { color:#38bdf8; }
-.stat.amber .num { color:#f59e0b; }
-.stat.purple .num { color:#a78bfa; }
-.company-stats { background:#1e293b; padding:24px; border-radius:14px; margin-bottom:30px; border:1px solid #293548; }
-.company-stats h2 { margin:0 0 20px; font-size:16px; color:#f1f5f9; }
-.company-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px; }
-.company-item { background:#0f172a; padding:18px; border-radius:10px; border-left:4px solid #f59e0b; }
-.company-item .name { font-size:14px; font-weight:700; color:#f1f5f9; margin-bottom:10px; }
-.company-item .count { font-size:36px; font-weight:800; color:#f59e0b; }
-.company-item .label { font-size:11px; color:#94a3b8; }
-.controls { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
-.controls input { flex:1; min-width:250px; padding:12px 16px; border-radius:10px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:14px; outline:none; }
-.controls input:focus { border-color:#4f46e5; }
-.controls button { padding:12px 24px; border-radius:10px; border:none; font-weight:600; cursor:pointer; color:#fff; font-size:13px; }
+body { background:#020617; color:#fff; font-family:Arial,sans-serif; margin:0; padding:20px; }
+.container { max-width:1200px; margin:0 auto; }
+header { text-align:center; padding:20px 0; border-bottom:1px solid #1e293b; margin-bottom:20px; }
+.logo { font-size:28px; font-weight:800; }
+.orange { color:#F58C1F; }
+.grey { color:#8E8E8E; display:block; font-size:24px; }
+.badge { background:#064e3b; color:#6ee7b7; padding:5px 12px; border-radius:15px; font-size:12px; display:inline-block; margin-top:10px; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:20px; }
+.stat { background:#1e293b; padding:20px; border-radius:10px; text-align:center; }
+.num { font-size:48px; font-weight:800; }
+.green { color:#10b981; }
+.blue { color:#38bdf8; }
+.amber { color:#f59e0b; }
+.purple { color:#a78bfa; }
+.label { font-size:11px; color:#94a3b8; text-transform:uppercase; margin-top:10px; }
+.card { background:#1e293b; padding:20px; border-radius:10px; margin-bottom:20px; }
+.company-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:15px; }
+.company-item { background:#0f172a; padding:15px; border-radius:8px; border-left:4px solid #f59e0b; }
+.company-name { font-weight:700; margin-bottom:5px; }
+.company-count { font-size:36px; font-weight:800; color:#f59e0b; }
+.controls { display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+input { flex:1; padding:12px; border-radius:5px; border:1px solid #334155; background:#0f172a; color:#fff; min-width:200px; }
+button { padding:12px 20px; border-radius:5px; border:none; font-weight:600; cursor:pointer; color:#fff; }
 .btn-refresh { background:#4f46e5; }
 .btn-export { background:#0891b2; }
 .btn-clear { background:#dc2626; }
-.date-range { display:none; background:#1e293b; padding:20px; border-radius:10px; margin-bottom:20px; gap:12px; align-items:center; flex-wrap:wrap; }
-.date-range label { color:#94a3b8; font-size:13px; font-weight:600; }
-.date-range input[type="date"] { padding:10px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; }
-.table-wrap { background:#1e293b; border-radius:14px; border:1px solid #293548; overflow:hidden; }
 table { width:100%; border-collapse:collapse; }
-thead th { background:#0f172a; padding:16px; text-align:left; font-size:11px; color:#94a3b8; text-transform:uppercase; letter-spacing:1.5px; font-weight:600; border-bottom:1px solid #293548; }
-tbody td { padding:16px; border-bottom:1px solid #0f172a; font-size:14px; }
-tbody tr:hover { background:#293548; }
-.operative-name { font-weight:700; color:#f1f5f9; }
-.operative-company { font-size:11px; color:#f59e0b; margin-top:4px; font-weight:600; }
-.method-badge { display:inline-block; padding:4px 12px; border-radius:12px; font-size:11px; font-weight:600; margin-right:8px; }
-.method-face { background:#164e63; color:#67e8f9; }
-.method-qr { background:#14532d; color:#86efac; }
-.action-badge { display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; }
-.action-IN { background:#064e3b; color:#6ee7b7; }
-.action-OUT { background:#78350f; color:#fcd34d; }
-.time-cell { color:#94a3b8; font-family:"SF Mono",Menlo,monospace; font-size:13px; }
-.empty { padding:40px; text-align:center; color:#64748b; }
-.footer { text-align:center; font-size:11px; color:#475569; margin-top:30px; padding:15px 0; border-top:1px solid #1e293b; }
+th { background:#0f172a; padding:12px; text-align:left; font-size:11px; color:#94a3b8; text-transform:uppercase; }
+td { padding:12px; border-bottom:1px solid #0f172a; }
+tr:hover { background:#293548; }
+.method-badge { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:600; }
+.face { background:#164e63; color:#67e8f9; }
+.qr { background:#14532d; color:#86efac; }
+.action-badge { padding:4px 12px; border-radius:12px; font-size:12px; font-weight:700; }
+.in { background:#064e3b; color:#6ee7b7; }
+.out { background:#78350f; color:#fcd34d; }
+.time { color:#94a3b8; font-family:monospace; }
+.empty { text-align:center; color:#64748b; padding:40px; }
+.footer { text-align:center; font-size:11px; color:#475569; margin-top:20px; }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<div class="logo-container">
-<div class="logo-text">
-<span class="logo-regency">REGENCY</span>
-<span class="logo-facades">FACADES</span>
+<div class="logo">
+<span class="orange">REGENCY</span>
+<span class="grey">FACADES</span>
 </div>
-<div class="live-badge"><span class="live-dot"></span>LIVE · <span id="last-update">connecting...</span></div>
-</div>
+<div class="badge">LIVE</div>
 </header>
 
 <div class="stats">
-<div class="stat green"><div class="num" id="stat-onsite">—</div><div class="lbl">Currently On Site</div></div>
-<div class="stat blue"><div class="num" id="stat-total">—</div><div class="lbl">Total Sign-Ins Today</div></div>
-<div class="stat amber"><div class="num" id="stat-recent">—</div><div class="lbl">Last 15 Minutes</div></div>
-<div class="stat purple"><div class="num" id="stat-unique">—</div><div class="lbl">Unique Operatives</div></div>
+<div class="stat">
+<div class="num green" id="onsite">0</div>
+<div class="label">Currently On Site</div>
+</div>
+<div class="stat">
+<div class="num blue" id="total">0</div>
+<div class="label">Total Sign-Ins Today</div>
+</div>
+<div class="stat">
+<div class="num amber" id="recent">0</div>
+<div class="label">Last 15 Minutes</div>
+</div>
+<div class="stat">
+<div class="num purple" id="unique">0</div>
+<div class="label">Unique Operatives</div>
+</div>
 </div>
 
-<div class="company-stats">
-<h2>📊 Operatives by Company</h2>
-<div class="company-grid" id="company-grid"><div class="empty">Loading...</div></div>
+<div class="card">
+<h2>Operatives by Company</h2>
+<div class="company-grid" id="companyGrid">
+<div class="empty">Loading...</div>
+</div>
 </div>
 
 <div class="controls">
-<input type="text" id="search" placeholder=" Filter by name, company, or method...">
-<button class="btn-refresh" onclick="location.reload()">↻ Refresh</button>
-<button class="btn-export" onclick="showExportDialog()">⬇ Export CSV</button>
-<button class="btn-clear" onclick="clearToday()"> Clear Today</button>
+<input type="text" id="search" placeholder="Filter by name, company, or method...">
+<button class="btn-refresh" onclick="location.reload()">Refresh</button>
+<button class="btn-export" onclick="exportCSV()">Export CSV</button>
+<button class="btn-clear" onclick="clearToday()">Clear Today</button>
 </div>
 
-<div class="date-range" id="dateRange">
-<label>From:</label><input type="date" id="startDate">
-<label>To:</label><input type="date" id="endDate">
-<button class="btn-refresh" onclick="exportCSVWithDateRange()" style="background:#10b981;"> Download</button>
-<button class="btn-clear" onclick="hideExportDialog()">Cancel</button>
-</div>
-
-<div class="table-wrap">
+<div class="card">
 <table>
 <thead>
-<tr><th>Operative</th><th>Method</th><th>Action</th><th>Time</th><th>Elapsed</th></tr>
+<tr>
+<th>Operative</th>
+<th>Method</th>
+<th>Action</th>
+<th>Time</th>
+<th>Elapsed</th>
+</tr>
 </thead>
-<tbody id="tbody"><tr><td colspan="5" class="empty">Connecting...</td></tr></tbody>
+<tbody id="tbody">
+<tr><td colspan="5" class="empty">Connecting...</td></tr>
+</tbody>
 </table>
 </div>
 
-<div class="footer">Regency Facades © 2026</div>
+<div class="footer">Regency Facades 2026</div>
 </div>
 
 <script>
 const SITE_ID = "I";
-
 const firebaseConfig = {
 apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
 authDomain: "swiftcheck-face.firebaseapp.com",
@@ -130,83 +130,144 @@ const signinsRef = db.ref('sites/' + SITE_ID + '/signins');
 const statusRef = db.ref('sites/' + SITE_ID + '/status');
 
 let allRecords = [];
-let operativeStatus = {};
-let filterText = '';
+let statusData = {};
 
-function todayStart() { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
-function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function timeAgo(ts) { const s = Math.floor((Date.now() - ts) / 1000); if (s < 60) return s + 's ago'; if (s < 3600) return Math.floor(s/60) + 'm ago'; if (s < 86400) return Math.floor(s/3600) + 'h ago'; return Math.floor(s/86400) + 'd ago'; }
+function todayStart() {
+const d = new Date();
+d.setHours(0, 0, 0, 0);
+return d.getTime();
+}
+
+function escapeHtml(text) {
+const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function timeAgo(ts) {
+const s = Math.floor((Date.now() - ts) / 1000);
+if (s < 60) return s + 's ago';
+if (s < 3600) return Math.floor(s / 60) + 'm ago';
+if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+return Math.floor(s / 86400) + 'd ago';
+}
 
 function render() {
 const today = todayStart();
 const todays = allRecords.filter(r => r.timestamp >= today);
 
-const onSiteNow = Object.values(operativeStatus).filter(s => s.onSite).length;
-const totalSignIns = todays.filter(r => r.action === 'IN').length;
-document.getElementById('stat-onsite').textContent = onSiteNow;
-document.getElementById('stat-total').textContent = totalSignIns;
-document.getElementById('stat-recent').textContent = todays.filter(r => Date.now() - r.timestamp < 15*60*1000).length;
-document.getElementById('stat-unique').textContent = new Set(todays.map(r => r.operativeId)).size;
+const onSiteNow = Object.values(statusData).filter(s => s.onSite).length;
+const totalIns = todays.filter(r => r.action === 'IN').length;
+const recent = todays.filter(r => Date.now() - r.timestamp < 15 * 60 * 1000).length;
+const unique = new Set(todays.map(r => r.operativeId)).size;
+
+document.getElementById('onsite').textContent = onSiteNow;
+document.getElementById('total').textContent = totalIns;
+document.getElementById('recent').textContent = recent;
+document.getElementById('unique').textContent = unique;
 
 const companyCount = {};
-Object.values(operativeStatus).forEach(status => {
-if (status.onSite) { const company = status.company || 'Unknown'; companyCount[company] = (companyCount[company] || 0) + 1; }
+Object.values(statusData).forEach(s => {
+if (s.onSite) {
+const company = s.company || 'Unknown';
+companyCount[company] = (companyCount[company] || 0) + 1;
+}
 });
-const companies = Object.entries(companyCount).sort((a,b) => b[1] - a[1]);
-document.getElementById('company-grid').innerHTML = companies.length ? companies.map(([c, n]) => `<div class="company-item"><div class="name">${escapeHtml(c)}</div><div class="count">${n}</div><div class="label">operatives</div></div>`).join('') : '<div class="empty">No operatives on site</div>';
 
-let records = todays;
-if (filterText) records = records.filter(r => String(r.operativeName).toLowerCase().includes(filterText) || String(r.operativeCompany).toLowerCase().includes(filterText) || String(r.method).toLowerCase().includes(filterText));
-records.sort((a,b) => b.timestamp - a.timestamp);
+const companies = Object.entries(companyCount).sort((a, b) => b[1] - a[1]);
+const grid = document.getElementById('companyGrid');
 
-document.getElementById('tbody').innerHTML = records.length ? records.map(r => {
-const t = new Date(r.timestamp);
-const timeStr = t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-const methodClass = r.method === 'FACE' ? 'method-face' : 'method-qr';
-return `<tr>
-<td><div class="operative-name">${escapeHtml(r.operativeName)}</div>${r.operativeCompany ? `<div class="operative-company">${escapeHtml(r.operativeCompany)}</div>` : ''}</td>
+if (companies.length === 0) {
+grid.innerHTML = '<div class="empty">No operatives on site</div>';
+} else {
+grid.innerHTML = companies.map(([c, n]) => `
+<div class="company-item">
+<div class="company-name">${escapeHtml(c)}</div>
+<div class="company-count">${n}</div>
+</div>
+`).join('');
+}
+
+const tbody = document.getElementById('tbody');
+const filter = document.getElementById('search').value.toLowerCase();
+
+let records = todays.filter(r =>
+r.operativeName.toLowerCase().includes(filter) ||
+(r.operativeCompany && r.operativeCompany.toLowerCase().includes(filter)) ||
+r.method.toLowerCase().includes(filter)
+);
+
+records.sort((a, b) => b.timestamp - a.timestamp);
+
+if (records.length === 0) {
+tbody.innerHTML = '<tr><td colspan="5" class="empty">No records today</td></tr>';
+} else {
+tbody.innerHTML = records.map(r => {
+const time = new Date(r.timestamp).toLocaleTimeString();
+const methodClass = r.method === 'FACE' ? 'face' : 'qr';
+const actionClass = r.action === 'IN' ? 'in' : 'out';
+return `
+<tr>
+<td>
+<div style="font-weight:700;">${escapeHtml(r.operativeName)}</div>
+${r.operativeCompany ? `<div style="font-size:12px; color:#F58C1F;">${escapeHtml(r.operativeCompany)}</div>` : ''}
+</td>
 <td><span class="method-badge ${methodClass}">${r.method}</span></td>
-<td><span class="action-badge action-${r.action}">${r.action}</span></td>
-<td class="time-cell">${timeStr}</td>
-<td class="time-cell">${timeAgo(r.timestamp)}</td>
-</tr>`;
-}).join('') : '<tr><td colspan="5" class="empty">No records' + (filterText ? ' matching "' + escapeHtml(filterText) + '"' : ' today') + '</td></tr>';
+<td><span class="action-badge ${actionClass}">${r.action}</span></td>
+<td class="time">${time}</td>
+<td class="time">${timeAgo(r.timestamp)}</td>
+</tr>
+`;
+}).join('');
+}
 }
 
 signinsRef.on('value', snap => {
 allRecords = [];
 snap.forEach(child => allRecords.push({ id: child.key, ...child.val() }));
-document.getElementById('last-update').textContent = 'updated ' + new Date().toLocaleTimeString();
 render();
 });
 
 statusRef.on('value', snap => {
-operativeStatus = {};
-snap.forEach(child => operativeStatus[child.key] = child.val());
+statusData = {};
+snap.forEach(child => { statusData[child.key] = child.val(); });
 render();
 });
 
-document.getElementById('search').addEventListener('input', e => { filterText = e.target.value.trim().toLowerCase(); render(); });
+document.getElementById('search').addEventListener('input', render);
 
-function showExportDialog() { document.getElementById('dateRange').style.display = 'flex'; const today = new Date().toISOString().split('T')[0]; document.getElementById('startDate').value = today; document.getElementById('endDate').value = today; }
-function hideExportDialog() { document.getElementById('dateRange').style.display = 'none'; }
+function exportCSV() {
+const today = todayStart();
+const data = allRecords.filter(r => r.timestamp >= today);
+if (data.length === 0) { alert('No records to export'); return; }
 
-function exportCSVWithDateRange() {
-const start = new Date(document.getElementById('startDate').value); start.setHours(0,0,0,0);
-const end = new Date(document.getElementById('endDate').value); end.setHours(23,59,59,999);
-const filtered = allRecords.filter(r => { const d = new Date(r.timestamp); return d >= start && d <= end; });
-if (!filtered.length) { alert('No records for this period'); return; }
-filtered.sort((a,b) => a.timestamp - b.timestamp);
 let csv = 'Date,Time,Name,Company,Method,Action\n';
-filtered.forEach(r => { csv += `"${new Date(r.timestamp).toISOString().split('T')[0]}","${new Date(r.timestamp).toLocaleTimeString()}","${r.operativeName}","${r.operativeCompany}","${r.method}","${r.action}"\n`; });
-const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `facecheck-site${SITE_ID}-${start.toISOString().split('T')[0]}-to-${end.toISOString().split('T')[0]}.csv`; a.click();
-hideExportDialog();
+data.sort((a, b) => a.timestamp - b.timestamp).forEach(r => {
+const date = new Date(r.timestamp).toISOString().split('T')[0];
+const time = new Date(r.timestamp).toLocaleTimeString();
+csv += `"${date}","${time}","${r.operativeName}","${r.operativeCompany || ''}","${r.method}","${r.action}"\n`;
+});
+
+const blob = new Blob([csv], { type: 'text/csv' });
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = `facecheck-${new Date().toISOString().split('T')[0]}.csv`;
+a.click();
 }
 
 async function clearToday() {
 if (!confirm('Delete ALL records from today?')) return;
-const today = todayStart(); const updates = {}; allRecords.forEach(r => { if (r.timestamp >= today) updates[r.id] = null; });
-try { await db.ref('sites/' + SITE_ID).update(updates); alert('Cleared'); } catch (err) { alert('Error: ' + err.message); }
+const today = todayStart();
+const updates = {};
+allRecords.forEach(r => {
+if (r.timestamp >= today) updates[r.id] = null;
+});
+try {
+await db.ref('sites/' + SITE_ID).update(updates);
+alert('Cleared');
+} catch (err) {
+alert('Error: ' + err.message);
+}
 }
 </script>
 </body>
