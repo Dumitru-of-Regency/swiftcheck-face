@@ -96,10 +96,6 @@ OPEN CAMERA FOR QR
 </div>
 
 <script>
-// ========== SITE CONFIGURATION ==========
-const SITE_ID = "I";
-// =========================================
-
 const firebaseConfig = {
 apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
 authDomain: "swiftcheck-face.firebaseapp.com",
@@ -112,10 +108,10 @@ appId: "1:450988754217:web:3635f97011943c51266338"
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const signinsRef = db.ref('sites/' + SITE_ID + '/signins');
-const statusRef = db.ref('sites/' + SITE_ID + '/status');
-const faceDescriptorsRef = db.ref('sites/' + SITE_ID + '/faceDescriptors');
-const operativesRef = db.ref('sites/' + SITE_ID + '/operatives');
+const signinsRef = db.ref('signins');
+const statusRef = db.ref('status');
+const faceDescriptorsRef = db.ref('faceDescriptors');
+const operativesRef = db.ref('operatives');
 
 let isFaceScanning = false;
 let isQrScanning = false;
@@ -125,10 +121,8 @@ let faceDescriptors = {};
 let operatives = {};
 let modelsLoaded = false;
 
-// Load face-api models
 async function loadModels() {
 try {
-console.log('Loading face detection models...');
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
 await Promise.all([
 faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
@@ -136,48 +130,29 @@ faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
 faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
 ]);
 modelsLoaded = true;
-console.log('✅ Models loaded successfully');
 } catch (err) {
-console.error('❌ Model loading error:', err);
+console.error('Model error:', err);
 }
 }
 
-// Load data from Firebase
 faceDescriptorsRef.on('value', snap => {
 faceDescriptors = {};
-let count = 0;
-snap.forEach(child => {
-faceDescriptors[child.key] = child.val();
-count++;
-});
-console.log(`📊 Loaded ${count} face descriptors from database`);
+snap.forEach(child => { faceDescriptors[child.key] = child.val(); });
 });
 
 operativesRef.on('value', snap => {
 operatives = {};
-let count = 0;
-snap.forEach(child => {
-operatives[child.key] = child.val();
-count++;
-});
-console.log(`📊 Loaded ${count} operatives from database`);
+snap.forEach(child => { operatives[child.key] = child.val(); });
 });
 
 function showStatus(message, type) {
 const box = document.getElementById('statusBox');
-console.log(`Status: ${message} (${type})`);
 box.textContent = message;
 box.className = 'status-box status-' + type;
 }
 
 async function startFaceScan() {
-console.log('🎥 Starting face scan...');
-
-if (!modelsLoaded) {
-console.log('Models not loaded, loading now...');
-await loadModels();
-}
-
+if (!modelsLoaded) await loadModels();
 if (isQrScanning) stopQrScan();
 
 isFaceScanning = true;
@@ -186,11 +161,9 @@ document.getElementById('btnCapture').style.display = 'block';
 showStatus('Position your face in the camera', 'scanning');
 
 try {
-console.log('Requesting camera access...');
 videoStream = await navigator.mediaDevices.getUserMedia({
 video: { facingMode: 'user', width: { ideal: 640 } }
 });
-console.log('✅ Camera access granted');
 
 const video = document.getElementById('video');
 video.srcObject = videoStream;
@@ -203,17 +176,14 @@ resolve();
 };
 });
 
-console.log(' Video stream ready, starting detection loop...');
 detectFaceLoop();
 } catch (err) {
-console.error('❌ Camera error:', err);
 showStatus('Camera error: ' + err.message, 'error');
 stopFaceScan();
 }
 }
 
 function stopFaceScan() {
-console.log(' Stopping face scan');
 isFaceScanning = false;
 document.getElementById('btnFace').style.display = 'block';
 document.getElementById('btnCapture').style.display = 'none';
@@ -236,7 +206,6 @@ setTimeout(detectFaceLoop, 500);
 return;
 }
 
-console.log('🔍 Detecting face...');
 const detection = await faceapi.detectSingleFace(
 video,
 new faceapi.TinyFaceDetectorOptions({
@@ -246,15 +215,12 @@ scoreThreshold: 0.3
 ).withFaceLandmarks().withFaceDescriptor();
 
 if (detection) {
-console.log('✅ Face detected, checking match...');
 const result = findBestMatch(detection.descriptor);
 
 if (result.match) {
-console.log(`🎯 Match found: ${result.match.name}`);
 await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
 } else {
-console.log(`❌ Face not recognized (distance: ${result.bestDistance})`);
 showStatus('Face not recognized - try QR code', 'error');
 setTimeout(() => {
 if (isFaceScanning) {
@@ -264,7 +230,7 @@ showStatus('Position your face in the camera', 'scanning');
 }
 }
 } catch (err) {
-console.error('❌ Detection error:', err);
+console.error('Detection error:', err);
 }
 
 if (isFaceScanning) {
@@ -273,7 +239,6 @@ setTimeout(detectFaceLoop, 500);
 }
 
 async function captureFace() {
-console.log('📸 Manual capture triggered');
 showStatus('Capturing face...', 'info');
 
 try {
@@ -287,24 +252,19 @@ scoreThreshold: 0.3
 ).withFaceLandmarks().withFaceDescriptor();
 
 if (!detection) {
-console.log('❌ No face detected in manual capture');
 showStatus('No face detected - try again', 'error');
 return;
 }
 
-console.log('✅ Face detected, finding match...');
 const result = findBestMatch(detection.descriptor);
 
 if (result.match) {
-console.log(`🎯 Match: ${result.match.name}`);
 await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
 } else {
-console.log(`❌ No match found`);
 showStatus('Face not recognized - try QR code', 'error');
 }
 } catch (err) {
-console.error('❌ Capture error:', err);
 showStatus('Error: ' + err.message, 'error');
 }
 }
@@ -315,14 +275,10 @@ let bestDistance = Infinity;
 let bestMatch = null;
 let bestId = null;
 
-console.log(`🔍 Checking ${Object.keys(faceDescriptors).length} registered faces...`);
-
 for (const [id, data] of Object.entries(faceDescriptors)) {
 try {
 const storedDescriptor = new Float32Array(data.descriptor);
 const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
-
-console.log(` ${data.name}: ${distance.toFixed(3)}`);
 
 if (distance < bestDistance) {
 bestDistance = distance;
@@ -333,7 +289,6 @@ bestId = id;
 if (distance < THRESHOLD) {
 const operative = operatives[id];
 if (operative) {
-console.log(`✅ Match found: ${operative.name}`);
 return {
 match: { id, name: operative.name, company: operative.company },
 distance: distance
@@ -341,7 +296,7 @@ distance: distance
 }
 }
 } catch (err) {
-console.error('Error comparing faces:', err);
+console.error('Match error:', err);
 }
 }
 
@@ -352,25 +307,13 @@ bestDistance: bestDistance === Infinity ? 999 : bestDistance
 }
 
 async function recordSignin(operativeId, name, company, method) {
-console.log('💾 Attempting to save sign-in:', {
-operativeId,
-name,
-company,
-method,
-timestamp: new Date().toISOString()
-});
-
 try {
-// Check current status
 const statusSnap = await statusRef.child(operativeId).once('value');
 const currentStatus = statusSnap.val();
 const isOnSite = currentStatus && currentStatus.onSite;
 const action = isOnSite ? 'OUT' : 'IN';
 
-console.log(`Current status: ${isOnSite ? 'ON SITE' : 'NOT ON SITE'}, Action: ${action}`);
-
-// Push to signins
-const newRecord = {
+await signinsRef.push({
 operativeId,
 operativeName: name,
 operativeCompany: company,
@@ -378,28 +321,19 @@ action,
 method,
 timestamp: firebase.database.ServerValue.TIMESTAMP,
 date: new Date().toISOString().slice(0,10)
-};
+});
 
-console.log('Saving record:', newRecord);
-await signinsRef.push(newRecord);
-console.log('✅ Record pushed to Firebase');
-
-// Update status
 await statusRef.child(operativeId).set({
 onSite: action === 'IN',
 lastAction: action,
 lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
 company: company
 });
-console.log('✅ Status updated in Firebase');
 
-// Show success message
 if (action === 'IN') {
 showStatus('Thank you - you signed IN ✓', 'success');
-console.log('✅ Sign-in complete!');
 } else {
 showStatus('Thank you - you signed OUT ✓', 'success');
-console.log('✅ Sign-out complete!');
 }
 
 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
@@ -410,8 +344,7 @@ showStatus('Ready to sign in', 'idle');
 }
 }, 3000);
 } catch (err) {
-console.error('❌ Save error:', err);
-showStatus('Error saving: ' + err.message, 'error');
+showStatus('Error: ' + err.message, 'error');
 }
 }
 
@@ -421,7 +354,6 @@ else { startQrScan(); }
 }
 
 function startQrScan() {
-console.log('📷 Starting QR scan...');
 if (isFaceScanning) stopFaceScan();
 isQrScanning = true;
 document.getElementById('btnQr').classList.add('scanning');
@@ -432,13 +364,11 @@ document.getElementById('qr-reader').style.display = 'block';
 qrScanner = new Html5Qrcode("qr-reader");
 qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 240 } },
 (decodedText) => {
-console.log('QR code scanned:', decodedText);
 handleQrCode(decodedText);
 stopQrScan();
 },
 (errorMessage) => {}
 ).catch(err => {
-console.error('QR error:', err);
 showStatus('QR error: ' + err.message, 'error');
 stopQrScan();
 });
@@ -454,7 +384,6 @@ showStatus('Ready to sign in', 'idle');
 }
 
 async function handleQrCode(qrData) {
-console.log('Processing QR code:', qrData);
 let operative = null;
 let operativeId = null;
 
@@ -467,17 +396,13 @@ break;
 }
 
 if (!operative) {
-console.error('Unknown QR code');
 showStatus('Unknown QR code', 'error');
 return;
 }
 
-console.log(`Found operative: ${operative.name}`);
 await recordSignin(operativeId, operative.name, operative.company, 'QR');
 }
 
-// Initialize
-console.log('🚀 Initializing FaceCheck...');
 loadModels();
 </script>
 </body>
