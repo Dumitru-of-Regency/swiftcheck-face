@@ -4,58 +4,45 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FaceCheck · Register Operative</title>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background:#020617; color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; min-height:100vh; }
 .container { max-width:700px; margin:0 auto; padding:20px; }
-
-/* Header & Logo */
 header { padding:20px 0 30px; border-bottom:1px solid #1e293b; margin-bottom:30px; }
-.logo-container { display:flex; align-items:center; gap:15px; }
 .logo-text { font-size:28px; font-weight:800; letter-spacing:1px; line-height:1.2; }
 .logo-regency { color:#F58C1F; }
 .logo-facades { color:#8E8E8E; display:block; font-size:24px; }
-
 .card { background:#1e293b; padding:25px; border-radius:14px; margin-bottom:20px; border:1px solid #293548; }
 .card h2 { margin:0 0 20px; font-size:18px; color:#f1f5f9; }
-
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px; }
 .form-group { display:flex; flex-direction:column; }
 .form-group.full { grid-column:1/-1; }
 label { font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; font-weight:600; }
 input { padding:12px 14px; border-radius:8px; border:1px solid #334155; background:#0f172a; color:#fff; font-size:14px; outline:none; }
 input:focus { border-color:#4f46e5; }
-
 button { padding:14px 24px; border-radius:8px; border:none; font-weight:700; cursor:pointer; color:#fff; font-size:15px; font-family:inherit; width:100%; margin-top:10px; }
 .btn-primary { background:#4f46e5; }
-.btn-primary:hover { background:#4338ca; }
 .btn-camera { background:#0891b2; }
 .btn-camera:disabled { background:#475569; cursor:not-allowed; opacity:0.5; }
 .btn-capture { background:#10b981; display:none; }
-
 #video { width:100%; border-radius:10px; display:none; margin-top:15px; }
-
 .status { padding:16px; border-radius:10px; text-align:center; font-weight:600; margin-bottom:20px; }
 .status-loading { background:#1e3a8a; color:#93c5fd; }
 .status-success { background:#064e3b; color:#6ee7b7; }
 .status-error { background:#7f1d1d; color:#fca5a5; }
-
 .footer { text-align:center; font-size:11px; color:#475569; margin-top:30px; padding:15px 0; border-top:1px solid #1e293b; }
-
 @media (max-width:600px) { .form-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 <div class="container">
 <header>
-<div class="logo-container">
 <div class="logo-text">
 <span class="logo-regency">REGENCY</span>
 <span class="logo-facades">FACADES</span>
-</div>
 </div>
 </header>
 
@@ -83,7 +70,7 @@ button { padding:14px 24px; border-radius:8px; border:none; font-weight:700; cur
 </div>
 
 <button type="button" class="btn-camera" id="btnCamera" onclick="startCamera()" disabled>
-📷 Open Camera to Capture Face
+Open Camera to Capture Face
 </button>
 <video id="video" autoplay muted playsinline></video>
 <button type="button" class="btn-capture" id="btnCapture" onclick="captureFace()">
@@ -95,9 +82,7 @@ button { padding:14px 24px; border-radius:8px; border:none; font-weight:700; cur
 </div>
 
 <script>
-// ========== SITE CONFIGURATION ==========
-const SITE_ID = "I"; // Change to "II", "III", etc. for other sites
-// =========================================
+const SITE_ID = "I";
 
 const firebaseConfig = {
 apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
@@ -117,24 +102,19 @@ const faceDescriptorsRef = db.ref('sites/' + SITE_ID + '/faceDescriptors');
 let modelsLoaded = false;
 let videoStream = null;
 
-// Load face-api models - FIXED VERSION
 async function loadModels() {
-try {
-// Use the correct CDN path for face-api.js models
 const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
-
+try {
 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
 await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-
 modelsLoaded = true;
 document.getElementById('status').className = 'status status-success';
 document.getElementById('status').textContent = '✅ Models loaded! Ready to register operatives.';
 document.getElementById('btnCamera').disabled = false;
 } catch (err) {
-console.error('Model loading error:', err);
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = '❌ Error loading models. Please refresh the page.';
+document.getElementById('status').textContent = '❌ Error loading models: ' + err.message;
 }
 }
 
@@ -214,13 +194,11 @@ document.getElementById('role').value = '';
 document.getElementById('qrCode').value = '';
 
 } catch (err) {
-console.error('Capture error:', err);
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = ' Error: ' + err.message;
 }
 }
 
-// Initialize when page loads
 loadModels();
 </script>
 </body>
