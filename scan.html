@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FaceCheck · Site Terminal</title>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -20,19 +20,18 @@ header { text-align:center; padding:20px 0 30px; border-bottom:1px solid #1e293b
 
 .status { padding:16px; border-radius:10px; text-align:center; font-weight:600; margin-bottom:20px; min-height:60px; display:flex; align-items:center; justify-content:center; }
 .status-idle { background:#1e293b; color:#64748b; border:2px dashed #334155; }
-.status-scanning { background:#fef3c7; color:#78350f; border:2px solid #f59e0b; animation:pulse 2s infinite; }
-.status-face-detected { background:#1e3a8a; color:#93c5fd; border:2px solid #3b82f6; }
+.status-scanning { background:#fef3c7; color:#78350f; border:2px solid #f59e0b; }
 .status-success { background:#064e3b; color:#6ee7b7; border:2px solid #10b981; }
 .status-error { background:#7f1d1d; color:#fca5a5; border:2px solid #ef4444; }
-@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+.status-info { background:#1e3a8a; color:#93c5fd; border:2px solid #3b82f6; }
 
 .card { background:#1e293b; padding:20px; border-radius:14px; margin-bottom:16px; border:1px solid #293548; }
 .card h2 { margin:0 0 15px; font-size:14px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; font-weight:600; }
 
 button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:16px; border-radius:10px; border:none; font-weight:700; font-size:15px; cursor:pointer; color:#fff; margin-bottom:10px; font-family:inherit; }
 button:active { transform:scale(0.98); }
+button:disabled { opacity:0.5; cursor:not-allowed; }
 .btn-face { background:#0891b2; }
-.btn-face.scanning { background:#f59e0b; }
 .btn-capture { background:#10b981; display:none; }
 .btn-qr { background:#059669; }
 .btn-qr.scanning { background:#dc2626; }
@@ -40,24 +39,17 @@ button:active { transform:scale(0.98); }
 #video { width:100%; border-radius:10px; display:none; margin-bottom:10px; background:#000; }
 #qr-reader { width:100%; border-radius:10px; overflow:hidden; margin-bottom:10px; background:#000; display:none; }
 
-.detection-indicator {
-position: fixed;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-background: rgba(16, 185, 129, 0.9);
-color: white;
-padding: 20px 40px;
-border-radius: 20px;
-font-size: 24px;
-font-weight: 700;
+.debug-info {
+background: #0f172a;
+padding: 12px;
+border-radius: 8px;
+font-family: monospace;
+font-size: 11px;
+color: #38bdf8;
+margin-bottom: 15px;
 display: none;
-z-index: 1000;
-animation: bounce 0.5s;
-}
-@keyframes bounce {
-0%, 100% { transform: translate(-50%, -50%) scale(1); }
-50% { transform: translate(-50%, -50%) scale(1.1); }
+max-height: 150px;
+overflow-y: auto;
 }
 
 .recent-item { background:#0f172a; padding:12px; border-radius:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
@@ -73,14 +65,14 @@ animation: bounce 0.5s;
 
 .footer { text-align:center; font-size:11px; color:#475569; margin-top:20px; padding:10px 0; border-top:1px solid #1e293b; }
 
-.face-detection-hint {
-background: #1e3a8a;
-padding: 12px;
+.match-threshold-hint {
+background: #1e293b;
+padding: 10px;
 border-radius: 8px;
-margin-bottom: 15px;
-font-size: 13px;
-color: #93c5fd;
-display: none;
+font-size: 12px;
+color: #94a3b8;
+margin-bottom: 10px;
+border-left: 4px solid #f59e0b;
 }
 </style>
 </head>
@@ -97,9 +89,12 @@ display: none;
 
 <div class="card">
 <h2>Face Recognition Scan</h2>
-<div class="face-detection-hint" id="faceHint">👤 Face detected! Processing...</div>
+<div class="match-threshold-hint" id="thresholdHint" style="display:none;">
+Matching threshold: <span id="thresholdValue">-</span> (lower = stricter)
+</div>
+<div class="debug-info" id="debugInfo"></div>
 <button type="button" class="btn-face" id="btnFace" onclick="startFaceScan()">
-🎥 START FACE SCAN
+START FACE SCAN
 </button>
 <button type="button" class="btn-capture" id="btnCapture" onclick="captureFace()">
 ✅ CAPTURE & SIGN IN
@@ -120,14 +115,13 @@ display: none;
 <div id="recentList"><div style="color:#64748b; text-align:center; padding:20px;">No activity yet today.</div></div>
 </div>
 
-<div class="detection-indicator" id="detectionIndicator">✅ FACE DETECTED!</div>
-
 <div class="footer">Regency Facades © 2026</div>
 </div>
 
 <script>
 // ========== SITE CONFIGURATION ==========
 const SITE_ID = "I";
+const DEBUG_MODE = true; // Set to false to hide debug info
 // =========================================
 
 const firebaseConfig = {
@@ -153,20 +147,60 @@ let videoStream = null;
 let qrScanner = null;
 let faceDescriptors = {};
 let operatives = {};
-let lastDetection = null;
-let detectionInterval = null;
+let modelsLoaded = false;
 
-// Load data
+// Debug logging
+function debug(msg) {
+if (!DEBUG_MODE) return;
+console.log('[FaceCheck]', msg);
+const debugEl = document.getElementById('debugInfo');
+if (debugEl) {
+const time = new Date().toLocaleTimeString();
+debugEl.innerHTML += `[${time}] ${msg}<br>`;
+debugEl.scrollTop = debugEl.scrollHeight;
+debugEl.style.display = 'block';
+}
+}
+
+// Load face-api models - iOS optimized
+async function loadModels() {
+try {
+debug('Loading face detection models...');
+const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model';
+
+await Promise.all([
+faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+]);
+
+modelsLoaded = true;
+debug('✅ Models loaded successfully');
+} catch (err) {
+debug('❌ Model loading error: ' + err.message);
+console.error('Model error:', err);
+}
+}
+
+// Load data from Firebase
 faceDescriptorsRef.on('value', snap => {
 faceDescriptors = {};
-snap.forEach(child => { faceDescriptors[child.key] = child.val(); });
-console.log('Loaded face descriptors:', Object.keys(faceDescriptors).length);
+let count = 0;
+snap.forEach(child => {
+faceDescriptors[child.key] = child.val();
+count++;
+});
+debug(`Loaded ${count} face descriptors from database`);
 });
 
 operativesRef.on('value', snap => {
 operatives = {};
-snap.forEach(child => { operatives[child.key] = child.val(); });
-console.log('Loaded operatives:', Object.keys(operatives).length);
+let count = 0;
+snap.forEach(child => {
+operatives[child.key] = child.val();
+count++;
+});
+debug(`Loaded ${count} operatives from database`);
 });
 
 function todayStart() { const d = new Date(); d.setHours(0,0,0,0); return d.getTime(); }
@@ -197,6 +231,11 @@ document.getElementById('recentList').innerHTML = html;
 });
 
 async function startFaceScan() {
+if (!modelsLoaded) {
+debug('Models not loaded yet, waiting...');
+await loadModels();
+}
+
 if (isQrScanning) stopQrScan();
 
 isFaceScanning = true;
@@ -204,49 +243,55 @@ document.getElementById('btnFace').style.display = 'none';
 document.getElementById('btnCapture').style.display = 'block';
 document.getElementById('status').className = 'status status-scanning';
 document.getElementById('status').textContent = '📷 Camera active - position your face';
-document.getElementById('faceHint').style.display = 'block';
+document.getElementById('thresholdHint').style.display = 'block';
 
 try {
+debug('Requesting camera access...');
 videoStream = await navigator.mediaDevices.getUserMedia({
 video: {
 facingMode: 'user',
-width: { ideal: 640 },
-height: { ideal: 480 }
+width: { ideal: 1280 },
+height: { ideal: 720 }
 }
 });
+debug('Camera access granted');
+
 const video = document.getElementById('video');
 video.srcObject = videoStream;
 video.style.display = 'block';
 
-// Start detection loop
+// Wait for video to be ready
+await new Promise(resolve => {
+video.onloadedmetadata = () => {
+video.play();
+resolve();
+};
+});
+
+debug('Video stream ready');
 detectFaceLoop();
 } catch (err) {
-console.error('Camera error:', err);
+debug('Camera error: ' + err.message);
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = ' Camera error: ' + err.message;
+document.getElementById('status').textContent = '❌ Camera error: ' + err.message;
 stopFaceScan();
 }
 }
 
 function stopFaceScan() {
 isFaceScanning = false;
-if (detectionInterval) {
-clearInterval(detectionInterval);
-detectionInterval = null;
-}
 document.getElementById('btnFace').style.display = 'block';
 document.getElementById('btnCapture').style.display = 'none';
 document.getElementById('status').className = 'status status-idle';
 document.getElementById('status').textContent = 'Ready — Use Face Scan or QR Code to sign in/out';
 document.getElementById('video').style.display = 'none';
-document.getElementById('faceHint').style.display = 'none';
-document.getElementById('detectionIndicator').style.display = 'none';
+document.getElementById('thresholdHint').style.display = 'none';
 
 if (videoStream) {
 videoStream.getTracks().forEach(track => track.stop());
 videoStream = null;
 }
-lastDetection = null;
+debug('Face scan stopped');
 }
 
 async function detectFaceLoop() {
@@ -259,40 +304,30 @@ setTimeout(detectFaceLoop, 500);
 return;
 }
 
+debug('Detecting face...');
 const detection = await faceapi.detectSingleFace(
 video,
 new faceapi.TinyFaceDetectorOptions({
-inputSize: 640,
-scoreThreshold: 0.5
+inputSize: 512,
+scoreThreshold: 0.3 // Lower threshold for iOS
 })
 ).withFaceLandmarks().withFaceDescriptor();
 
-if (detection && isFaceScanning) {
-// Show visual feedback
-document.getElementById('faceHint').style.display = 'block';
-document.getElementById('faceHint').textContent = '👤 Face detected! Processing...';
-document.getElementById('detectionIndicator').style.display = 'block';
-setTimeout(() => {
-document.getElementById('detectionIndicator').style.display = 'none';
-}, 1000);
+if (detection) {
+debug('Face detected, checking match...');
+const result = findBestMatch(detection.descriptor);
 
-const matchedOperative = findFaceMatch(detection.descriptor);
-
-if (matchedOperative) {
-// Prevent duplicate processing
-const now = Date.now();
-if (lastDetection && lastDetection.id === matchedOperative.id && (now - lastDetection.time) < 3000) {
-console.log('Already processing this person, skipping...');
-return;
-}
-lastDetection = { id: matchedOperative.id, time: now };
-
-await recordSignin(matchedOperative.id, matchedOperative.name, matchedOperative.company, 'FACE');
+if (result.match) {
+debug(`✅ Match found: ${result.match.name} (distance: ${result.distance})`);
+await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
-return;
 } else {
+debug(`❌ No match found (best distance: ${result.bestDistance}, threshold: ${result.threshold})`);
+document.getElementById('thresholdValue').textContent = result.bestDistance.toFixed(3);
+
+// Show temporary error
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = ' Face not recognized - not in database';
+document.getElementById('status').textContent = 'Face not recognized - try again or use QR';
 setTimeout(() => {
 if (isFaceScanning) {
 document.getElementById('status').className = 'status status-scanning';
@@ -300,23 +335,19 @@ document.getElementById('status').textContent = '📷 Camera active - position y
 }
 }, 3000);
 }
-} else {
-// No face detected
-document.getElementById('faceHint').style.display = 'none';
 }
 } catch (err) {
-console.error('Detection error:', err);
+debug('Detection error: ' + err.message);
 }
 
-// Continue loop
 if (isFaceScanning) {
-setTimeout(detectFaceLoop, 300);
+setTimeout(detectFaceLoop, 500);
 }
 }
 
-// Manual capture button - for when auto-detection fails
 async function captureFace() {
-document.getElementById('status').className = 'status status-scanning';
+debug('Manual capture triggered');
+document.getElementById('status').className = 'status status-info';
 document.getElementById('status').textContent = '⏳ Capturing face...';
 
 try {
@@ -324,51 +355,79 @@ const video = document.getElementById('video');
 const detection = await faceapi.detectSingleFace(
 video,
 new faceapi.TinyFaceDetectorOptions({
-inputSize: 640,
-scoreThreshold: 0.5
+inputSize: 512,
+scoreThreshold: 0.3
 })
 ).withFaceLandmarks().withFaceDescriptor();
 
 if (!detection) {
+debug('No face detected in manual capture');
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = '❌ No face detected - try again';
 return;
 }
 
-const matchedOperative = findFaceMatch(detection.descriptor);
+debug('Face detected, finding match...');
+const result = findBestMatch(detection.descriptor);
 
-if (matchedOperative) {
-await recordSignin(matchedOperative.id, matchedOperative.name, matchedOperative.company, 'FACE');
+if (result.match) {
+debug(`✅ Match: ${result.match.name}`);
+await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');
 stopFaceScan();
 } else {
+debug(`❌ No match (distance: ${result.bestDistance})`);
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = '❌ Face not recognized - not in database';
+document.getElementById('status').textContent = `❌ Not recognized (threshold: ${result.bestDistance.toFixed(3)})`;
 }
 } catch (err) {
-console.error('Manual capture error:', err);
+debug('Capture error: ' + err.message);
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = ' Error: ' + err.message;
 }
 }
 
-function findFaceMatch(inputDescriptor) {
-const THRESHOLD = 0.6; // Adjust if needed (lower = stricter)
+function findBestMatch(inputDescriptor) {
+const THRESHOLD = 0.65; // iOS optimized (higher = more lenient)
+let bestDistance = Infinity;
+let bestMatch = null;
+let bestId = null;
+
+debug(`Checking ${Object.keys(faceDescriptors).length} registered faces...`);
 
 for (const [id, data] of Object.entries(faceDescriptors)) {
+try {
 const storedDescriptor = new Float32Array(data.descriptor);
 const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
 
-console.log('Checking match - Distance:', distance, 'Threshold:', THRESHOLD);
+debug(` ${data.name}: ${distance.toFixed(3)}`);
+
+if (distance < bestDistance) {
+bestDistance = distance;
+bestMatch = data;
+bestId = id;
+}
 
 if (distance < THRESHOLD) {
 const operative = operatives[id];
 if (operative) {
-console.log('Match found!', operative.name);
-return { id, name: operative.name, company: operative.company };
+return {
+match: { id, name: operative.name, company: operative.company },
+distance: distance,
+threshold: THRESHOLD,
+bestDistance: bestDistance
+};
 }
 }
+} catch (err) {
+debug('Error comparing faces: ' + err.message);
 }
-return null;
+}
+
+return {
+match: null,
+threshold: THRESHOLD,
+bestDistance: bestDistance === Infinity ? 999 : bestDistance
+};
 }
 
 function toggleQrScan() {
@@ -393,7 +452,7 @@ stopQrScan();
 },
 (errorMessage) => {}
 ).catch(err => {
-console.error('QR error:', err);
+debug('QR error: ' + err.message);
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = ' QR error: ' + err.message;
 stopQrScan();
@@ -411,6 +470,7 @@ if (qrScanner) { try { qrScanner.stop(); } catch(e){} qrScanner = null; }
 }
 
 async function handleQrCode(qrData) {
+debug('QR code scanned: ' + qrData);
 let operative = null;
 let operativeId = null;
 
@@ -423,8 +483,9 @@ break;
 }
 
 if (!operative) {
+debug('Unknown QR code');
 document.getElementById('status').className = 'status status-error';
-document.getElementById('status').textContent = '❌ Unknown QR code: ' + qrData;
+document.getElementById('status').textContent = '❌ Unknown QR code';
 return;
 }
 
@@ -432,8 +493,9 @@ await recordSignin(operativeId, operative.name, operative.company, 'QR');
 }
 
 async function recordSignin(operativeId, name, company, method) {
+debug(`Recording ${method} sign-in for ${name}`);
 document.getElementById('status').className = 'status status-success';
-document.getElementById('status').textContent = ' Recording ' + name + '...';
+document.getElementById('status').textContent = ` Recording ${name}...`;
 
 try {
 const statusSnap = await statusRef.child(operativeId).once('value');
@@ -458,8 +520,8 @@ lastTimestamp: firebase.database.ServerValue.TIMESTAMP,
 company: company
 });
 
-document.getElementById('status').className = 'status status-success';
-document.getElementById('status').textContent = '✅ ' + name + ' — ' + (action === 'IN' ? 'SIGNED IN' : 'SIGNED OUT');
+debug(`✅ ${name} ${action === 'IN' ? 'signed in' : 'signed out'}`);
+document.getElementById('status').textContent = `✅ ${name} — ${action === 'IN' ? 'SIGNED IN' : 'SIGNED OUT'}`;
 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 
 setTimeout(() => {
@@ -469,11 +531,15 @@ document.getElementById('status').textContent = 'Ready — Use Face Scan or QR C
 }
 }, 3000);
 } catch (err) {
-console.error('Signin error:', err);
+debug('Signin error: ' + err.message);
 document.getElementById('status').className = 'status status-error';
 document.getElementById('status').textContent = '❌ Error: ' + err.message;
 }
 }
+
+// Initialize
+debug('Initializing FaceCheck...');
+loadModels();
 </script>
 </body>
 </html>
