@@ -164,8 +164,11 @@ if (status.onSite) { const company = status.company || 'Unknown'; companyCount[c
 const companies = Object.entries(companyCount).sort((a,b) => b[1] - a[1]);
 document.getElementById('company-grid').innerHTML = companies.length ? companies.map(([c, n]) => `<div class="company-item"><div class="name">${escapeHtml(c)}</div><div class="count">${n}</div><div class="label">operatives</div></div>`).join('') : '<div class="empty">No operatives on site</div>';
 
+// Show ALL records (not just currently on site)
 let records = todays;
 if (filterText) records = records.filter(r => String(r.operativeName).toLowerCase().includes(filterText) || String(r.operativeCompany).toLowerCase().includes(filterText) || String(r.method).toLowerCase().includes(filterText));
+
+// Sort by time (newest first)
 records.sort((a,b) => b.timestamp - a.timestamp);
 
 document.getElementById('tbody').innerHTML = records.length ? records.map(r => {
@@ -182,8 +185,19 @@ return `<tr>
 }).join('') : '<tr><td colspan="5" class="empty">No records' + (filterText ? ' matching "' + escapeHtml(filterText) + '"' : ' today') + '</td></tr>';
 }
 
-signinsRef.on('value', snap => { allRecords = []; snap.forEach(child => allRecords.push({ id: child.key, ...child.val() })); document.getElementById('last-update').textContent = 'updated ' + new Date().toLocaleTimeString(); render(); });
-statusRef.on('value', snap => { operativeStatus = {}; snap.forEach(child => operativeStatus[child.key] = child.val()); render(); });
+// Load ALL sign-ins (not filtered)
+signinsRef.on('value', snap => {
+allRecords = [];
+snap.forEach(child => allRecords.push({ id: child.key, ...child.val() }));
+document.getElementById('last-update').textContent = 'updated ' + new Date().toLocaleTimeString();
+render();
+});
+
+statusRef.on('value', snap => {
+operativeStatus = {};
+snap.forEach(child => operativeStatus[child.key] = child.val());
+render();
+});
 
 document.getElementById('search').addEventListener('input', e => { filterText = e.target.value.trim().toLowerCase(); render(); });
 
