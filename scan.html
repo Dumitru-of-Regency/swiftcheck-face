@@ -41,23 +41,28 @@ button:active { transform:scale(0.98); }
 <span class="logo-facades">FACADES</span>
 </div>
 </header>
+
 <div id="statusBox" class="status-box status-idle">Ready to sign in</div>
+
 <div class="card">
 <h2>Face Recognition</h2>
-<button type="button" class="btn-face" id="btnFace" onclick="startFaceScan()"> START FACE SCAN</button>
+<button type="button" class="btn-face" id="btnFace" onclick="startFaceScan()">🎥 START FACE SCAN</button>
 <button type="button" class="btn-capture" id="btnCapture" onclick="captureFace()">✅ CAPTURE & SIGN IN</button>
 <video id="video" autoplay muted playsinline></video>
 </div>
+
 <div class="card">
 <h2>QR Code</h2>
 <div id="qr-reader"></div>
 <button type="button" class="btn-qr" id="btnQr" onclick="toggleQrScan()">📷 OPEN CAMERA FOR QR</button>
 </div>
+
 <div class="footer">Regency Facades © 2026</div>
 </div>
 
 <script>
 const SITE_ID = "I";
+
 const firebaseConfig = {
 apiKey: "AIzaSyDtoxxIjNTNUAs36702Fvcis-ZnfTjyJyU",
 authDomain: "swiftcheck-face.firebaseapp.com",
