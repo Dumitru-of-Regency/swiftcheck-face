@@ -95,7 +95,7 @@ tr:hover { background: rgba(255,255,255,0.05); }
 </table>
 </div>
 
-<div class="footer">We Are A Team Together Ltd © 2026</div>
+<div class="footer">Regency Facades © 2026</div>
 </div>
 
 <script>
@@ -232,7 +232,7 @@ csv += `"${date}","${time}","${r.operativeName || ''}","${r.operativeCompany || 
 });
 const blob = new Blob([csv], { type: 'text/csv' });
 const url = URL.createObjectURL(blob);
-const a = document.createElement('a'); a.href = url; a.download = `swiftcheck-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+const a = document.createElement('a'); a.href = url; a.download = `regency-facades-${new Date().toISOString().split('T')[0]}.csv`; a.click();
 }
 
 async function clearToday() {
@@ -252,17 +252,9 @@ updates['status'] = null;
 try {
 await db.ref('sites/' + SITE_ID).update(updates);
 alert('✅ Dashboard reset successfully!');
-alert('✅ Dashboard reset successfully!');
 location.reload();
-} catch (err) { location.reload();
 } catch (err) {
 alert('Error clearing: ' + err.message);
-alert('Error clearing: ' + err.message);
-}
-}
-
-render();
-</script
 }
 }
 
