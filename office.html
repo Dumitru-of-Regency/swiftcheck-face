@@ -56,7 +56,7 @@ tr:hover { background: rgba(255,255,255,0.05); }
 <body>
 <div class="container">
 <header>
-<div class="logo">SWIFTCHECK</div>
+<div class="logo">REGENCY FACADES</div>
 <div class="badge">● Live</div>
 </header>
 
@@ -181,12 +181,14 @@ const methodClass = r.method === 'FACE' ? 'face' : 'qr';
 const actionClass = r.action === 'IN' ? 'in' : 'out';
 
 let locationHtml = '<span style="color:#64748b">No location</span>';
-if (r.location && r.location.address) {
+if (r.location) {
+if (r.location.address) {
 const mapUrl = `https://www.google.com/maps?q=${r.location.lat},${r.location.lng}`;
 locationHtml = `<span class="location-icon">📍</span><span class="location-cell" title="${escapeHtml(r.location.address)}">${escapeHtml(r.location.address)}</span><a href="${mapUrl}" target="_blank" class="map-link"> View</a>`;
-} else if (r.location && r.location.lat) {
+} else if (r.location.lat && r.location.lng) {
 const mapUrl = `https://www.google.com/maps?q=${r.location.lat},${r.location.lng}`;
-locationHtml = `<span class="location-cell">${r.location.lat.toFixed(4)}, ${r.location.lng.toFixed(4)}</span><a href="${mapUrl}" target="_blank" class="map-link">🗺 View</a>`;
+locationHtml = `<span class="location-cell">${r.location.lat.toFixed(4)}, ${r.location.lng.toFixed(4)}</span><a href="${mapUrl}" target="_blank" class="map-link"> View</a>`;
+}
 }
 
 return `<tr>
@@ -234,7 +236,7 @@ const a = document.createElement('a'); a.href = url; a.download = `swiftcheck-${
 }
 
 async function clearToday() {
-if (!confirm('⚠️ Reset dashboard for demo? This will delete today\'s records and reset the live status.')) return;
+if (!confirm('️ Reset dashboard for demo? This will delete today\'s records and reset the live status.')) return;
 
 const today = todayStart();
 const updates = {};
@@ -250,9 +252,17 @@ updates['status'] = null;
 try {
 await db.ref('sites/' + SITE_ID).update(updates);
 alert('✅ Dashboard reset successfully!');
+alert('✅ Dashboard reset successfully!');
 location.reload();
+} catch (err) { location.reload();
 } catch (err) {
-alert('Error: ' + err.message);
+alert('Error clearing: ' + err.message);
+alert('Error clearing: ' + err.message);
+}
+}
+
+render();
+</script
 }
 }
 
