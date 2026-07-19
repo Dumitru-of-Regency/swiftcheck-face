@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SwiftCheck - Site Terminal</title>
+<title>Regency Facades - Site Terminal</title>
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -18,7 +18,8 @@ header { text-align:center; padding:30px 0; margin-bottom:20px; }
 .card { background: rgba(30, 41, 59, 0.8); padding:25px; border-radius:20px; margin-bottom:20px; border: 1px solid rgba(255,255,255,0.1); }
 h2 { margin:0 0 20px; font-size:13px; color:#94a3b8; text-transform:uppercase; letter-spacing:2px; font-weight:700; }
 button { width:100%; padding:18px; margin:10px 0; border-radius:12px; border:none; font-weight:700; cursor:pointer; color:#fff; font-size:16px; text-transform: uppercase; letter-spacing: 1px; }
-.btn-face { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+.btn-face { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); } position.coords.longitude;
+const accuracy = position.coords.accuracy
 .btn-capture { background: linear-gradient(135deg, #10b981 0%, #059669 100%); display:none; }
 .btn-qr { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
 #video { width:100%; border-radius:15px; display:none; margin-bottom:15px; border: 3px solid rgba(6, 182, 212, 0.5); }
@@ -36,11 +37,11 @@ button { width:100%; padding:18px; margin:10px 0; border-radius:12px; border:non
 <body>
 <div class="container">
 <header>
-<div class="logo">SWIFTCHECK</div>
+<div class="logo">REGENCY FACADES</div>
 <div class="tagline">Site Terminal</div>
 </header>
 
-<div class="privacy-notice"> Location tracking enabled for attendance verification</div>
+<div class="privacy-notice">🔒 Location tracking enabled for attendance verification</div>
 
 <div id="statusBox" class="status-box status-idle">Ready to sign in</div>
 
@@ -53,12 +54,12 @@ button { width:100%; padding:18px; margin:10px 0; border-radius:12px; border:non
 </div>
 
 <div class="card">
-<h2> QR Code</h2>
+<h2>📷 QR Code</h2>
 <div id="qr-reader"></div>
 <button type="button" class="btn-qr" id="btnQr" onclick="toggleQrScan()">Open Camera for QR</button>
 </div>
 
-<div class="footer">We Are A Team Together Ltd © 2026</div>
+<div class="footer">Regency Facades © 2026</div>
 </div>
 
 <script>
@@ -121,153 +122,305 @@ async (position) => {
 const lat = position.coords.latitude;
 const lng = position.coords.longitude;
 const accuracy = position.coords.accuracy;
+showLocationInfo(`📍 Location acquired;
 showLocationInfo(`📍 Location acquired (${accuracy.toFixed(0)}m accuracy)`);
+(${accuracy.toFixed(0)}m accuracy)`);
 try {
+const address = await reverseGeocode(lat try {
 const address = await reverseGeocode(lat, lng);
+resolve({ lat, lng, accuracy, lng);
 resolve({ lat, lng, accuracy, address });
-} catch (err) { resolve({ lat, lng, accuracy, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` }); }
+} catch (err) { resolve, address });
+} catch (err) { resolve({ lat, lng, accuracy, address: `${lat.toFixed({ lat, lng, accuracy, address: `${lat.toFixed(4)}, ${lng.toFixed(4)}` }); }(4)}, ${lng.toFixed(4)}` }); }
+},
+(error) => { hideLocation
 },
 (error) => { hideLocationInfo(); reject(error); },
-{ enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+{ enableHighAccuracyInfo(); reject(error); },
+{ enableHighAccuracy: true, timeout: 15000,: true, timeout: 15000, maximumAge: 0 }
+);
+}); maximumAge: 0 }
 );
 });
 }
 
+async function reverseGeocode(lat, lng)
+}
+
 async function reverseGeocode(lat, lng) {
 try {
-const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, { headers: { 'User-Agent': 'SwiftCheck Attendance System' } });
+const response = await fetch {
+try {
+const response = await fetch(`https://nominatim.openstreetmap.org/re(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lngverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {}&zoom=18&addressdetails=1`, { headers: { 'User-Agent': 'Regency Facades headers: { 'User-Agent': 'Regency Facades Attendance System' } });
+const data = await response Attendance System' } });
 const data = await response.json();
 if (data.display_name) {
+.json();
+if (data.display_name) {
 const addr = data.address;
+const parts = const addr = data.address;
 const parts = [];
+if (addr.road) parts.push(addr [];
 if (addr.road) parts.push(addr.road);
+if (addr.suburb) parts.road);
 if (addr.suburb) parts.push(addr.suburb);
-if (addr.city || addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+if (addr.city ||.push(addr.suburb);
+if (addr.city || addr.town || addr.village) parts.push(addr.city addr.town || addr.village) parts.push(addr.city || addr.town || addr.village);
+if || addr.town || addr.village);
 if (addr.postcode) parts.push(addr.postcode);
+(addr.postcode) parts.push(addr.postcode);
+return parts.join(', ') || data.display_name;
 return parts.join(', ') || data.display_name;
 }
+return `${lat.toFixed(4)}, ${ }
 return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-} catch (err) { return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
+} catch (lng.toFixed(4)}`;
+} catch (err) { return `${lat.toFixed(4)}, ${lngerr) { return `${lat.toFixed(4)}, ${lng.toFixed(4)}`; }
+}
+
+async function.toFixed(4)}`; }
 }
 
 async function startFaceScan() {
+if (!modelsLoaded) startFaceScan() {
 if (!modelsLoaded) await loadModels();
+if (isQrSc await loadModels();
 if (isQrScanning) stopQrScan();
-try { currentLocation = await getLocation(); } catch (err) { showStatus('️ Location access denied.', 'error'); setTimeout(() => showStatus('Ready to sign in', 'idle'), 3000); return; }
+try { currentanning) stopQrScan();
+try { currentLocation = await getLocation(); } catch (err) { showLocation = await getLocation(); } catch (err) { showStatus('⚠️ Location access denied.', 'errorStatus('⚠️ Location access denied.', 'error'); setTimeout(() => showStatus('Ready to sign in','); setTimeout(() => showStatus('Ready to sign in', 'idle'), 3000); return; } 'idle'), 3000); return; }
+isFaceScanning = true;
+document
 isFaceScanning = true;
 document.getElementById('btnFace').style.display = 'none';
-document.getElementById('btnCapture').style.display = 'block';
-showStatus('Position your face in the camera', 'scanning');
+.getElementById('btnFace').style.display = 'none';
+document.getElementById('btnCapture').style.display = 'block document.getElementById('btnCapture').style.display = 'block';
+showStatus('👤 Position your';
+showStatus('👤 Position your face in the camera', 'scanning');
+try face in the camera', 'scanning');
 try {
-videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } });
+videoStream = await navigator.mediaDevices.getUserMedia {
+videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width:({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { { ideal: 1280 }, height: { ideal: 720 } } });
+const ideal: 720 } } });
 const video = document.getElementById('video');
+video.srcObject video = document.getElementById('video');
 video.srcObject = videoStream;
+video.style.display = 'block = videoStream;
 video.style.display = 'block';
-await new Promise(r => { video.onloadedmetadata = () => { video.play(); r(); }; });
+await new Promise(r => { video.onloaded';
+await new Promise(r => { video.onloadedmetadata = () => { video.play(); r(); }; });metadata = () => { video.play(); r(); }; });
 detectFaceLoop();
-} catch (err) { hideLocationInfo(); showStatus('Camera error', 'error'); stopFaceScan(); }
+} catch (err
+detectFaceLoop();
+} catch (err) { hideLocationInfo(); showStatus(') { hideLocationInfo(); showStatus(' Camera error', 'error'); stopFaceScan(); } Camera error', 'error'); stopFaceScan(); }
+}
+
+function stopFaceScan() {
+is
 }
 
 function stopFaceScan() {
 isFaceScanning = false;
+document.getElementById('btnFaceScanning = false;
 document.getElementById('btnFace').style.display = 'block';
+document.getElementByIdFace').style.display = 'block';
 document.getElementById('btnCapture').style.display = 'none';
+('btnCapture').style.display = 'none';
+document.getElementById('video').style.display = 'none';
 document.getElementById('video').style.display = 'none';
 hideLocationInfo();
-if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+if (videoStream) hideLocationInfo();
+if (videoStream) { videoStream.getTracks().forEach(t => t.stop()); { videoStream.getTracks().forEach(t => t.stop()); videoStream = null; }
+currentLocation = null videoStream = null; }
 currentLocation = null;
+showStatus('Ready to sign in', ';
 showStatus('Ready to sign in', 'idle');
+}
+
+async function detectFaceLoop() {idle');
 }
 
 async function detectFaceLoop() {
 if (!isFaceScanning) return;
+
+if (!isFaceScanning) return;
 try {
+const video = document.getElementById('video try {
 const video = document.getElementById('video');
-if (!video || video.readyState !== 4) { setTimeout(detectFaceLoop, 500); return; }
-const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.3 })).withFaceLandmarks().withFaceDescriptor();
+if (!video || video.readyState !== 4');
+if (!video || video.readyState !== 4) { setTimeout(detectFaceLoop, 500) { setTimeout(detectFaceLoop, 500); return; }
+const detection = await faceapi); return; }
+const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetector.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThresholdOptions({ inputSize: 512, scoreThreshold: 0.3 })).withFaceLandmarks().with: 0.3 })).withFaceLandmarks().withFaceDescriptor();
+if (detection) {
+FaceDescriptor();
 if (detection) {
 const result = findBestMatch(detection.descriptor);
-if (result.match) { await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE'); stopFaceScan(); }
-else { hideLocationInfo(); showStatus('Face not recognized - try QR code', 'error'); setTimeout(() => { if (isFaceScanning) showStatus('Position your face in the camera', 'scanning'); }, 3000); }
+const result = findBestMatch(detection.descriptor);
+if (result.match) { await recordSignin(result if (result.match) { await recordSignin(result.match.id, result.match.name, result.match.company, '.match.id, result.match.name, result.match.company, 'FACE'); stopFaceScan(); }
+else { hideFACE'); stopFaceScan(); }
+else { hideLocationInfo(); showStatus('Face not recognized - try QRLocationInfo(); showStatus('Face not recognized - try QR code', 'error'); setTimeout(() => { if (is code', 'error'); setTimeout(() => { if (isFaceScanning) showStatus('Position your face in theFaceScanning) showStatus('Position your face in the camera', 'scanning'); }, 3000 camera', 'scanning'); }, 3000); }
+}
+} catch (err)); }
 }
 } catch (err) { console.error(err); }
-if (isFaceScanning) setTimeout(detectFaceLoop, 500);
+if (isFace { console.error(err); }
+if (isFaceScanning) setTimeout(detectFaceLoop, 50Scanning) setTimeout(detectFaceLoop, 500);
 }
 
 async function captureFace() {
-showStatus('Capturing...', 'info');
+0);
+}
+
+async function captureFace() {
+showStatus('⏳ Capturing...', 'info showStatus('⏳ Capturing...', 'info');
+try {
+const video = document.getElementById');
 try {
 const video = document.getElementById('video');
-const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold: 0.3 })).withFaceLandmarks().withFaceDescriptor();
-if (!detection) { hideLocationInfo(); showStatus('No face detected', 'error'); return; }
+const detection = await faceapi.detect('video');
+const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptionsSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 512, scoreThreshold:({ inputSize: 512, scoreThreshold: 0.3 })).withFaceLandmarks().withFace 0.3 })).withFaceLandmarks().withFaceDescriptor();
+if (!detection) { hideLocationDescriptor();
+if (!detection) { hideLocationInfo(); showStatus('⚠️ NoInfo(); showStatus('⚠️ No face detected', 'error'); return; }
+const face detected', 'error'); return; }
 const result = findBestMatch(detection.descriptor);
-if (result.match) { await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE'); stopFaceScan(); }
-else { hideLocationInfo(); showStatus('Face not recognized - try QR', 'error'); }
-} catch (err) { hideLocationInfo(); showStatus('Error', 'error'); }
+if result = findBestMatch(detection.descriptor);
+if (result.match) { await recordSignin(result.match.id (result.match) { await recordSignin(result.match.id, result.match.name, result.match.company, 'FACE');, result.match.name, result.match.company, 'FACE'); stopFaceScan(); }
+else { hideLocationInfo stopFaceScan(); }
+else { hideLocationInfo(); showStatus('Face not recognized - try QR', '(); showStatus('Face not recognized - try QR', 'error'); }
+} catch (err) { hideerror'); }
+} catch (err) { hideLocationInfo(); showStatus('❌ Error', 'errorLocationInfo(); showStatus('❌ Error', 'error'); }
+}
+
+function findBestMatch(inputDescriptor)'); }
 }
 
 function findBestMatch(inputDescriptor) {
+const THRESHOLD = 0.6 {
 const THRESHOLD = 0.65;
+for (const [id, data]5;
 for (const [id, data] of Object.entries(faceDescriptors)) {
+const storedDescriptor of Object.entries(faceDescriptors)) {
 const storedDescriptor = new Float32Array(data.descriptor);
-const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
+const = new Float32Array(data.descriptor);
+const distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor distance = faceapi.euclideanDistance(inputDescriptor, storedDescriptor);
+if (distance < THRESHOLD) {);
 if (distance < THRESHOLD) {
 const operative = operatives[id];
-if (operative) return { match: { id, name: operative.name, company: operative.company } };
+if (
+const operative = operatives[id];
+if (operative) return { match: { id, name: operativeoperative) return { match: { id, name: operative.name, company: operative.company } };
+}
+.name, company: operative.company } };
 }
 }
 return { match: null };
+} }
+return { match: null };
 }
+
+async function recordSignin(operativeId, name,
 
 async function recordSignin(operativeId, name, company, method) {
 try {
-const statusSnap = await statusRef.child(operativeId).once('value');
+const company, method) {
+try {
+const statusSnap = await statusRef.child(operativeId).once statusSnap = await statusRef.child(operativeId).once('value');
+const currentStatus = statusSnap.val('value');
 const currentStatus = statusSnap.val();
+const isOnSite = currentStatus && current();
 const isOnSite = currentStatus && currentStatus.onSite;
+const action = isOnSiteStatus.onSite;
 const action = isOnSite ? 'OUT' : 'IN';
-const signinData = { operativeId, operativeName: name, operativeCompany: company, action, method, timestamp: firebase.database.ServerValue.TIMESTAMP, date: new Date().toISOString().slice(0,10) };
+const signin ? 'OUT' : 'IN';
+const signinData = { operativeId, operativeName: name,Data = { operativeId, operativeName: name, operativeCompany: company, action, method, timestamp: firebase operativeCompany: company, action, method, timestamp: firebase.database.ServerValue.TIMESTAMP, date: new Date().toISOString.database.ServerValue.TIMESTAMP, date: new Date().toISOString().slice(0,10) };
+if().slice(0,10) };
 if (currentLocation) {
-signinData.location = { lat: currentLocation.lat, lng: currentLocation.lng, accuracy: currentLocation.accuracy, address: currentLocation.address, timestamp: Date.now() };
+signinData.location = { (currentLocation) {
+signinData.location = { lat: currentLocation.lat, lng: currentLocation.lng, lat: currentLocation.lat, lng: currentLocation.lng, accuracy: currentLocation.accuracy, address: currentLocation.address, accuracy: currentLocation.accuracy, address: currentLocation.address, timestamp: Date.now() };
+}
+await timestamp: Date.now() };
 }
 await signinsRef.push(signinData);
-await statusRef.child(operativeId).set({ onSite: action === 'IN', lastAction: action, lastTimestamp: firebase.database.ServerValue.TIMESTAMP, company: company });
-const locText = currentLocation ? `\n ${currentLocation.address}` : '';
-const msg = action === 'IN' ? `✅ Welcome ${name} - Signed IN${locText}` : ` Goodbye ${name} - Signed OUT${locText}`;
+await status signinsRef.push(signinData);
+await statusRef.child(operativeId).set({ onSite: actionRef.child(operativeId).set({ onSite: action === 'IN', lastAction: action, lastTimestamp: === 'IN', lastAction: action, lastTimestamp: firebase.database.ServerValue.TIMESTAMP, company: company });
+firebase.database.ServerValue.TIMESTAMP, company: company });
+const locText = currentLocation ? `\n const locText = currentLocation ? `\n ${currentLocation.address}` : '';
+const ${currentLocation.address}` : '';
+const msg = action === 'IN' ? `✅ Welcome ${ msg = action === 'IN' ? `✅ Welcome ${name} - Signed IN${locText}` : `name} - Signed IN${locText}` : ` Goodbye ${name} - Signed OUT${loc Goodbye ${name} - Signed OUT${locText}`;
+showStatus(msg, 'success');Text}`;
 showStatus(msg, 'success');
-if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-setTimeout(() => { if (!isFaceScanning && !isQrScanning) showStatus('Ready to sign in', 'idle'); }, 5000);
-} catch (err) { hideLocationInfo(); showStatus('Error saving', 'error'); }
+if (navigator.vibrate) navigator.vibrate([
+if (navigator.vibrate) navigator.vibrate([100, 50, 100100, 50, 100]);
+setTimeout(() => { if (!isFaceSc]);
+setTimeout(() => { if (!isFaceScanning && !isQrScanning) showStatus('anning && !isQrScanning) showStatus('Ready to sign in', 'idle'); }, 50Ready to sign in', 'idle'); }, 5000);
+} catch (err) { hide00);
+} catch (err) { hideLocationInfo(); showStatus('❌ Error saving',LocationInfo(); showStatus('❌ Error saving', 'error'); }
 }
 
-function toggleQrScan() { if (isQrScanning) stopQrScan(); else startQrScan(); }
+function toggleQrScan 'error'); }
+}
+
+function toggleQrScan() { if (isQrScanning) stopQ() { if (isQrScanning) stopQrScan(); else startQrScan(); }
+
+asyncrScan(); else startQrScan(); }
 
 async function startQrScan() {
+if (is function startQrScan() {
 if (isFaceScanning) stopFaceScan();
-try { currentLocation = await getLocation(); } catch (err) { console.error('Location error:', err); }
+try {FaceScanning) stopFaceScan();
+try { currentLocation = await getLocation(); } catch (err) { currentLocation = await getLocation(); } catch (err) { console.error('Location error:', err); }
+is console.error('Location error:', err); }
 isQrScanning = true;
+document.getElementById('QrScanning = true;
 document.getElementById('btnQr').textContent = 'Stop QR Scan';
-showStatus('Point camera at QR code', 'scanning');
+btnQr').textContent = 'Stop QR Scan';
+showStatus('📷 Point camera at QR code showStatus('📷 Point camera at QR code', 'scanning');
+document.getElementById('qr-reader', 'scanning');
 document.getElementById('qr-reader').style.display = 'block';
+qrScanner =').style.display = 'block';
 qrScanner = new Html5Qrcode("qr-reader");
-qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 240 } }, (decodedText) => { handleQrCode(decodedText); stopQrScan(); }, () => {}).catch(err => { hideLocationInfo(); showStatus('QR error', 'error'); stopQrScan(); });
+qr new Html5Qrcode("qr-reader");
+qrScanner.start({ facingMode: "environment" }, { fpsScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: : 10, qrbox: { width: 240, height: 240 } },240, height: 240 } }, (decodedText) => { handleQrCode(decodedText (decodedText) => { handleQrCode(decodedText); stopQrScan(); }, () => {}).catch(err); stopQrScan(); }, () => {}).catch(err => { hideLocationInfo(); showStatus('QR => { hideLocationInfo(); showStatus('QR error', 'error'); stopQrScan(); });
+error', 'error'); stopQrScan(); });
 }
 
 function stopQrScan() {
+is}
+
+function stopQrScan() {
 isQrScanning = false;
-document.getElementById('btnQr').textContent = 'Open Camera for QR';
+document.getElementById('QrScanning = false;
+document.getElementById('btnQr').textContent = 'Open Camera for QR';btnQr').textContent = 'Open Camera for QR';
+document.getElementById('qr-reader').style.display = '
 document.getElementById('qr-reader').style.display = 'none';
 hideLocationInfo();
-if (qrScanner) { try { qrScanner.stop(); } catch(e){} qrScanner = null; }
+if (none';
+hideLocationInfo();
+if (qrScanner) { try { qrScanner.stop(); } catchqrScanner) { try { qrScanner.stop(); } catch(e){} qrScanner = null; }
+current(e){} qrScanner = null; }
 currentLocation = null;
+showStatus('Ready to signLocation = null;
 showStatus('Ready to sign in', 'idle');
 }
 
+async function handleQ in', 'idle');
+}
+
 async function handleQrCode(qrData) {
-for (const [id, data] of Object.entries(operatives)) {
-if (data.qrCode === qrData || id === qrData) { await recordSignin(id, data.name, data.company, 'QR'); return; }
+for (constrCode(qrData) {
+for (const [id, data] of Object.entries(operatives)) [id, data] of Object.entries(operatives)) {
+if (data.qrCode === qrData {
+if (data.qrCode === qrData || id === qrData) { await recordSignin(id || id === qrData) { await recordSignin(id, data.name, data.company, 'QR'); return;, data.name, data.company, 'QR'); return; }
 }
 hideLocationInfo();
-showStatus('Unknown QR code', 'error');
+}
+}
+hideLocationInfo();
+showStatus('❌ Unknown QR code', 'error'); showStatus('❌ Unknown QR code', 'error');
+}
+
+loadModels();
+</script>
+</
 }
 
 loadModels();
